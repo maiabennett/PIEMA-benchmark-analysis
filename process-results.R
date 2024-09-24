@@ -504,6 +504,29 @@ ggplot(all.data.master, aes(x = avg.kernels.per.receptor.pair, y = avg.subgraph.
 
 ggsave(paste0(out.path, "/dot_plot_average_kernel_matches_vs_average_subgraph_shape_similarity.png"), width = 6, height = 4)
 
+# Average number of kernel matches versus average Euclidean distance
+ggplot(all.data.master, aes(x = avg.distance.per.receptor.pair, y = avg.kernels.per.receptor.pair, color = type)) +
+    geom_point() +
+    labs(title = "Average number of kernel matches vs average Euclidean distance",
+         x = "Average Euclidean distance",
+         y = "Average number of kernel matches",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/dot_plot_average_kernel_matches_vs_average_euclidean_distance.png"), width = 6, height = 4)
+
+# Average number of kernel matches versus Spearman correlation coefficient
+ggplot(all.data.master, aes(x = avg.corr.per.receptor.pair, 
+    y = avg.kernels.per.receptor.pair, color = type)) +
+    geom_point() +
+    labs(title = "Average number of kernel matches vs Spearman correlation coefficient",
+         x = "Average Spearman correlation",
+         y = "Average number of kernel matches",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/dot_plot_average_kernel_matches_vs_average_spearman_correlation.png"), width = 6, height = 4)
+
 
 # Sankey diagram 
 library(networkD3)
@@ -561,3 +584,45 @@ sankeyplot <- sankeyNetwork(Links = links, Nodes = nodes, Source = "source",
 (sankeyplot <- prependContent(sankeyplot, htmltools::tags$h3("Total receptor pairs per epitope pair")))
 
 saveWidget(sankeyplot, file = paste0(out.path, "/sankey_plot_receptor_pairs.html"), selfcontained = TRUE)
+
+
+# PCA of all features (top KAS, average KAS, Spearman correlation, Euclidean distance, subgraph shape similarity, average number of kernels per pairing)
+
+library(ggfortify)
+library(factoextra)
+
+# Select data
+pca.data <- all.data.master %>%
+    filter(samp.epitope != "Combined") %>%
+    select(ref.epitope, samp.epitope, type, avg.top.kdist.per.receptor.pair, avg.kdist.per.receptor.pair, avg.corr.per.receptor.pair, avg.distance.per.receptor.pair, avg.subgraph.shape.sim, avg.kernels.per.receptor.pair)
+
+# Perform PCA
+pca.result <- prcomp(pca.data %>% select(-ref.epitope, -samp.epitope, -type), scale. = TRUE)
+
+# Plot PCA
+autoplot(pca.result, data = pca.data, colour = 'type') +
+    labs(title = "PCA of all features",
+            x = "Principal Component 1",
+            y = "Principal Component 2",
+            color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/pca_plot.png"), width = 6, height = 4)
+
+autoplot(pca.result, data = pca.data, colour = 'type', loadings = TRUE, loadings.label = TRUE, loadings.label.size = 3) +
+    labs(title = "PCA of all features, with eigenvectors",
+            x = "Principal Component 1",
+            y = "Principal Component 2",
+            color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/pca_plot_with_eigenvectors.png"), width = 6, height = 4)
+
+fviz_pca_ind(pca.result, col.ind = pca.data$type, geom = "point", addEllipses=TRUE, ellipse.level=0.95) +
+    labs(title = "PCA of all features, individual factor map",
+            x = "Principal Component 1",
+            y = "Principal Component 2",
+            color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/pca_plot_individual_factor_map.png"), width = 6, height = 4)
