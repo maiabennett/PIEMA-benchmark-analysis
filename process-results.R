@@ -10,9 +10,12 @@
 library(tidyverse)
 
 # Specify paths
-negative.data.path <- "./results/negative/apbs"
-positive.data.path <- "./results/positive/apbs"
-out.path <- "./analysis/apbs"
+# negative.data.path <- "./results/negative/apbs/"
+# positive.data.path <- "./results/positive/apbs"
+# out.path <- "./analysis/apbs"
+negative.data.path <- "./results/negative/easymifs/CMET"
+positive.data.path <- "./results/positive/easymifs/CMET"
+out.path <- "./analysis/easymifs/CMET"
 
 # Make analysis directory
 dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
@@ -20,7 +23,7 @@ dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
 # Import data
 
 negative.data <- data.frame()
-positive.data <- read.csv(paste0(positive.data.path, "positive_final_results.csv"))
+positive.data <- read.csv(paste0(positive.data.path, "/positive_final_results.csv"))
 
 # Import all .csv files in the folder "./results/negative/apbs" and append them to negative.data
 files <- list.files(path = negative.data.path, pattern = "*.csv", full.names = TRUE)
@@ -28,6 +31,13 @@ for (file in files) {
     temp.data <- read.csv(file)
     negative.data <- rbind(negative.data, temp.data)
 }
+
+# If '_rot' still present in ID column, remove all instances
+negative.data <- negative.data %>%
+    mutate(id = str_replace_all(id, "_rot", ""))
+
+positive.data <- positive.data %>%
+    mutate(id = str_replace_all(id, "_rot", ""))
 
 # Break ID column into separate columns for each receptor
 negative.data <- negative.data %>%
