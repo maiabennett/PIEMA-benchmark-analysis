@@ -5,6 +5,10 @@
 # University of Nebraska at Omaha
 # ============================================================
 
+source("../paired-tcr-data/util/filtering.R")
+source("../paired-tcr-data/util/processing.R")
+source("../paired-tcr-data/util/formatting.R")
+
 # PIEMA benchmark data selection
 # Import high confidence data
 high.confidence <- read.csv("./data/high-confidence-paired-sequences.csv")
@@ -17,7 +21,7 @@ compare.cdrs <- high.confidence %>%
 high.confidence.similarity.90 <- filterSequenceSimilarity(compare.cdrs, "Compare", 0.9)
 data.frame(Distinct_values = sapply(high.confidence.similarity.90, function(x) length(unique(x))))
 
-write.csv(high.confidence.similarity.90 %>% select(-Compare), "./paired-data/high-confidence-similarity-90-paired-sequences.csv", row.names = FALSE)
+write.csv(high.confidence.similarity.90 %>% select(-Compare), "./data/high-confidence-similarity-90-paired-sequences.csv", row.names = FALSE)
 
 # Generate negative data with specified epitope list (generates evenly distributed data for epitopes)
 # This list contains all epitopes with > 50 receptors in 90% similarity high confidence dataset
@@ -31,7 +35,7 @@ negative.data <- negative.data %>%
     mutate(clone.id = paste0("decoy_", Epitope, "_", row_number())) %>%
     ungroup() 
 
-write.csv(negative.data, "./paired-data/piema-benchmark-negative-sequences.csv", row.names = FALSE)
+write.csv(negative.data, "./data/piema-benchmark-negative-sequences.csv", row.names = FALSE)
 
 # Randomly sample 50 receptors per epitope from high confidence dataset
 # In this dataset, 36 are known to be cross-reactive between GIL and YVL epitopes
@@ -44,7 +48,7 @@ positive.data <- high.confidence.similarity.90 %>%
     sample_n(50) %>% 
     ungroup()
 
-write.csv(positive.data, "./paired-data/piema-benchmark-positive-sequences.csv", row.names = FALSE)
+write.csv(positive.data, "./data/piema-benchmark-positive-sequences.csv", row.names = FALSE)
 
 
 # Final data for benchmarking matrix: 
@@ -56,4 +60,4 @@ all.input <- rbind(
     positive.data %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ),
     negative.data %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ))
 
-write.csv(all.input, "./paired-data/piema-benchmark-input-sequences.csv", row.names = FALSE)
+write.csv(all.input, "./data/piema-benchmark-input-sequences.csv", row.names = FALSE)
