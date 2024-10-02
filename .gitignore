@@ -1,0 +1,7 @@
+# Ignore all sankey/HTML files
+*sankey*
+
+# Ignore .RData files
+*.RData
+*.RData
+workspace.RData

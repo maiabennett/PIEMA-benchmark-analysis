@@ -307,6 +307,19 @@ ggplot(all.data.master, aes(x = ref.epitope, y = avg.kdist.per.receptor.pair, co
 
 ggsave(paste0(out.path, "/point_plot_average_kas_values.png"), width = 12, height = 8)
 
+# Median subgraph KAS value per reference receptor epitope (x axis) colored by sample receptor epitope
+ggplot(all.data.master, aes(x = ref.epitope, y = avg.median.kdist.per.receptor.pair, color = match.epitope)) +
+    geom_point(aes(size = ifelse(match.epitope %in% c("True positive", "Decoy", "Combined"), 2, 1))) +
+    labs(title = "Median subgraph KAS value per reference receptor epitope, colored by sample receptor epitope",
+         x = "Reference epitope",
+         y = "Median subgraph KAS value",
+         color = "Paired receptor epitope") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_size_continuous(range = c(2, 4), guide = "none")
+
+ggsave(paste0(out.path, "/point_plot_median_subgraph_kas_values.png"), width = 12, height = 8)
+
 # Average Spearman correlation per reference receptor epitope (x axis) colored by sample receptor epitope
 ggplot(all.data.master, aes(x = ref.epitope, y = avg.corr.per.receptor.pair, color = match.epitope)) +
     geom_point(aes(size = ifelse(match.epitope %in% c("True positive", "Decoy", "Combined"), 2, 1))) +
