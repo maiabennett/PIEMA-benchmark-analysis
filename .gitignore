@@ -1,5 +1,6 @@
 # Ignore all sankey/HTML files
 *sankey*
+sankey*/
 
 # Ignore .RData files
 *.RData
