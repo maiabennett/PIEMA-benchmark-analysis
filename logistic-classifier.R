@@ -55,11 +55,14 @@ model1.long <- model1.data %>%
 
 ggplot(model1.long, aes(x = shared.specificity, y = value, fill = feature)) +
     geom_boxplot() +
-    facet_wrap(~feature, scales = "free", ncol = 4) +
+    facet_wrap(~feature, scales = "free", ncol = 5) +
     scale_color_viridis_d(option = "plasma", begin = 0.1, end = 0.9) +
-    theme_minimal()
+    theme_minimal() +
+    theme(legend.position = "none", axis.title.x = element_blank(), 
+        strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"))
 
-ggsave(paste0(out.path, "model1_feature_boxplot.png"), width = 10, height = 15)
+ggsave(paste0(out.path, "model1_feature_boxplot.png"), width = 20, height = 10)
 
 model2.long <- model2.data %>%
     select(shared.specificity, top.kas, avg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity) %>%
@@ -67,11 +70,14 @@ model2.long <- model2.data %>%
 
 ggplot(model2.long, aes(x = shared.specificity, y = value, fill = feature)) +
     geom_boxplot() +
-    facet_wrap(~feature, scales = "free", ncol = 4) +
+    facet_wrap(~feature, scales = "free", ncol = 5) +
     scale_color_viridis_d(option = "plasma", begin = 0.1, end = 0.9) +
-    theme_minimal()
+    theme_minimal() +
+    theme(legend.position = "none", axis.title.x = element_blank(), 
+        strip.background = element_rect(fill = "grey60"), 
+        strip.text = element_text(color = "white", face = "bold"))
 
-ggsave(paste0(out.path, "model2_feature_boxplot.png"), width = 10, height = 15)
+ggsave(paste0(out.path, "model2_feature_boxplot.png"), width = 20, height = 10)
 
 
 # Set seed for reproducibility
@@ -92,7 +98,14 @@ positive.class <- "Yes"
 negative.class <- "No"
 
 # Structure + sequence model formula
+# Add all features to structure, try additional combined features as well
+
+# Seven feature set
 combined.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
+# Six feature set
+# combined.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity + full.similarity
+# Five feature set
+# combined.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity
 # Structure-only model formula
 structure.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count
 # Sequence-only model formula
@@ -124,10 +137,10 @@ classification.metrics <- metric_set(yardstick::accuracy,
                                      f_meas) 
 
 # Define the recipe for the logistic regression models
-combined.model1.recipe <- recipe(model.form, data = model1.train) %>%
+combined.model1.recipe <- recipe(combined.model.form, data = model1.train) %>%
     step_dummy(all_nominal(), -all_outcomes()) %>%
     step_normalize(all_predictors())
-combined.model2.recipe <- recipe(model.form, data = model2.train) %>%
+combined.model2.recipe <- recipe(combined.model.form, data = model2.train) %>%
     step_dummy(all_nominal(), -all_outcomes()) %>%
     step_normalize(all_predictors())
 
@@ -146,9 +159,9 @@ sequence.model2.recipe <- recipe(sequence.model.form, data = model2.train) %>%
     step_normalize(all_predictors())
 
 # Recipes with upsampling
-combined.model1.upsampling.recipe <- model1.recipe %>%
+combined.model1.upsampling.recipe <- combined.model1.recipe %>%
     step_smotenc(target.var)
-combined.model2.upsampling.recipe <- model2.recipe %>%
+combined.model2.upsampling.recipe <- combined.model2.recipe %>%
     step_smotenc(target.var)
 
 structure.model1.upsampling.recipe <- structure.model1.recipe %>%
@@ -162,9 +175,9 @@ sequence.model2.upsampling.recipe <- sequence.model2.recipe %>%
     step_smotenc(target.var)
 
 # Recipes with downsampling
-combined.model1.downsampling.recipe <- model1.recipe %>%
+combined.model1.downsampling.recipe <- combined.model1.recipe %>%
     step_downsample(target.var)
-combined.model2.downsampling.recipe <- model2.recipe %>%
+combined.model2.downsampling.recipe <- combined.model2.recipe %>%
     step_downsample(target.var)
 
 structure.model1.downsampling.recipe <- structure.model1.recipe %>%
@@ -218,12 +231,13 @@ sequence.model2.workflow <- workflow_set(sequence.model2.recipes,
     cross = FALSE)
 
 # Specify resamples and CV folds
+set.seed(77482951)
 control <- control_resamples(save_workflow = TRUE,
                                  save_pred = TRUE,
                                  event_level = "second")
 
-model1.cv.folds <- vfold_cv(model1.train, v = 5)
-model2.cv.folds <- vfold_cv(model2.train, v = 5)
+model1.cv.folds <- vfold_cv(model1.train, v = 10)
+model2.cv.folds <- vfold_cv(model2.train, v = 10)
 
 
 # Fit the model sets
@@ -392,14 +406,14 @@ model2.metrics <- combined.model2.test.metrics %>%
         dplyr::rename(sequence.estimate = .estimate))
 
 # Save the results
-write.csv(combined.model1.final.fit, paste0(out.path, "combined_model1_predictions.csv"))
-write.csv(combined.model2.final.fit, paste0(out.path, "combined_model2_predictions.csv"))
-write.csv(structure.model1.final.fit, paste0(out.path, "structure_model1_predictions.csv"))
-write.csv(structure.model2.final.fit, paste0(out.path, "structure_model2_predictions.csv"))
-write.csv(sequence.model1.final.fit, paste0(out.path, "sequence_model1_predictions.csv"))
-write.csv(sequence.model2.final.fit, paste0(out.path, "sequence_model2_predictions.csv"))
-write.csv(model1.metrics, paste0(out.path, "model1_metrics.csv"))
-write.csv(model2.metrics, paste0(out.path, "model2_metrics.csv"))
+write.csv(combined.model1.final.fit, paste0(out.path, "combined_model1_predictions.csv"), row.names = FALSE)
+write.csv(combined.model2.final.fit, paste0(out.path, "combined_model2_predictions.csv"), row.names = FALSE)
+write.csv(structure.model1.final.fit, paste0(out.path, "structure_model1_predictions.csv"), row.names = FALSE)
+write.csv(structure.model2.final.fit, paste0(out.path, "structure_model2_predictions.csv"), row.names = FALSE)
+write.csv(sequence.model1.final.fit, paste0(out.path, "sequence_model1_predictions.csv"), row.names = FALSE)
+write.csv(sequence.model2.final.fit, paste0(out.path, "sequence_model2_predictions.csv"), row.names = FALSE)
+write.csv(model1.metrics, paste0(out.path, "model1_metrics.csv"), row.names = FALSE)
+write.csv(model2.metrics, paste0(out.path, "model2_metrics.csv"), row.names = FALSE)
 
 # Plot ROC 
 # Look into storing models based on various metrics and plotting them together
@@ -486,8 +500,8 @@ model2.coefficients <- combined.model2.coefficients %>%
         dplyr::rename(sequence.estimate = estimate, sequence.p.value = p.value))
 
 # Save coefficients
-write.csv(model1.coefficients, paste0(out.path, "model1_coefficients.csv"))
-write.csv(model2.coefficients, paste0(out.path, "model2_coefficients.csv"))
+write.csv(model1.coefficients, paste0(out.path, "model1_coefficients.csv"), row.names = FALSE)
+write.csv(model2.coefficients, paste0(out.path, "model2_coefficients.csv"), row.names = FALSE)
 
 # Check performance of models on specific epitopes
 # Fetch predictions from the best models (i.e., final fit objects), group by epitope, and calculate metrics
@@ -551,15 +565,21 @@ model2.epitope.metrics <- combined.model2.epitope.metrics %>%
     arrange(ref.epitope)
 
 # Save epitope metrics
-write.csv(model1.epitope.metrics, paste0(out.path, "model1_epitope_metrics.csv"))
-write.csv(model2.epitope.metrics, paste0(out.path, "model2_epitope_metrics.csv"))
+write.csv(model1.epitope.metrics, paste0(out.path, "model1_epitope_metrics.csv"), row.names = FALSE)
+write.csv(model2.epitope.metrics, paste0(out.path, "model2_epitope_metrics.csv"), row.names = FALSE)
 
 # Per-epitope ROCs
 # Define function to label points at best fbeta
 getfbeta <- function(data, beta = 0.5) {
-    data %>%
-        dplyr::mutate(precision = sensitivity / (sensitivity + (1 - specificity)),
-            fbeta = (1 + beta^2) * (precision * sensitivity) / ((beta^2 * precision) + sensitivity))
+    if ("specificity" %in% names(data)) {
+        data %>%
+            dplyr::mutate(precision = sensitivity / (sensitivity + (1 - specificity)),
+                fbeta = (1 + beta^2) * (precision * sensitivity) / ((beta^2 * precision) + sensitivity))
+    }
+    else if ("recall" %in% names(data)) {
+        data %>%
+            dplyr::mutate(fbeta = (1 + beta^2) * (precision * recall) / ((beta^2 * precision) + recall))
+    }
 }
 
 combined.model1.gil.roc <- combined.model1.final.fit %>%
@@ -706,4 +726,207 @@ sequence.model1.epitope.roc %>%
 
 ggsave(paste0(out.path, "sequence_model1_roc_per_epitope.png"), width = 10, height = 10)
 
+# All strategies and epitopes combined (messy but informative, for now)
+# Combined model is solid line
+# Structure model is dashed line
+# Sequence model is dotted line
+model1.epitope.roc <- bind_rows(combined.model1.epitope.roc %>% mutate(model = "Combined"), structure.model1.epitope.roc %>% mutate(model = "Structure"), sequence.model1.epitope.roc %>% mutate(model = "Sequence"))
+label.data <- model1.epitope.roc %>%
+    group_by(epitope, model) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+model1.epitope.roc %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.5) +
+    geom_abline(lty = 3) + 
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
 
+ggsave(paste0(out.path, "model1_roc_per_epitope.png"), width = 20, height = 20)
+
+
+# PR curves
+# All data
+combined.model1.pr <- combined.model1.final.fit %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(model = "Best model combining structure and sequence features")
+structure.model1.pr <- structure.model1.final.fit %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(model = "Best model using structure features")
+sequence.model1.pr <- sequence.model1.final.fit %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(model = "Best model using sequence features")
+
+bind_rows(combined.model1.pr, structure.model1.pr, sequence.model1.pr) %>%
+    ggplot(aes(x = recall, y = precision, col = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", end = .6)
+
+ggsave(paste0(out.path, "model1_pr.png"), width = 10, height = 10)
+
+# Per epitope
+combined.model1.gil.pr <- combined.model1.final.fit %>%
+    filter(ref.epitope == "GILGFVFTL") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "GILGFVFTL")
+combined.model1.gil.yvl.pr <- combined.model1.final.fit %>%
+    filter(ref.epitope == "GILGFVFTL_YVLDHLIVV") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "GILGFVFTL_YVLDHLIVV")
+combined.model1.glc.pr <- combined.model1.final.fit %>%
+    filter(ref.epitope == "GLCTLVAML") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "GLCTLVAML")
+combined.model1.nlv.pr <- combined.model1.final.fit %>%
+    filter(ref.epitope == "NLVPMVATV") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "NLVPMVATV")
+combined.model1.rpi.pr <- combined.model1.final.fit %>%
+    filter(ref.epitope == "RPIIRPATL") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "RPIIRPATL")
+combined.model1.ylq.pr <- combined.model1.final.fit %>%
+    filter(ref.epitope == "YLQPRTFLL") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "YLQPRTFLL")
+combined.model1.yvl.pr <- combined.model1.final.fit %>%
+    filter(ref.epitope == "YVLDHLIVV") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "YVLDHLIVV")
+combined.model1.epitope.pr <- bind_rows(combined.model1.gil.pr, combined.model1.gil.yvl.pr, combined.model1.glc.pr, combined.model1.nlv.pr, combined.model1.rpi.pr, combined.model1.ylq.pr, combined.model1.yvl.pr) %>%
+    getfbeta()
+label.data <- combined.model1.epitope.pr %>%
+    group_by(epitope) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+combined.model1.epitope.pr %>%
+    ggplot(aes(x = recall, y = precision, color = epitope)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "FBeta = ", round(fbeta, 2))), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.1, end = .9)
+
+ggsave(paste0(out.path, "combined_model1_pr_per_epitope.png"), width = 10, height = 10)
+
+structure.model1.gil.pr <- structure.model1.final.fit %>%
+    filter(ref.epitope == "GILGFVFTL") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "GILGFVFTL")
+structure.model1.gil.yvl.pr <- structure.model1.final.fit %>%
+    filter(ref.epitope == "GILGFVFTL_YVLDHLIVV") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "GILGFVFTL_YVLDHLIVV")
+structure.model1.glc.pr <- structure.model1.final.fit %>%
+    filter(ref.epitope == "GLCTLVAML") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "GLCTLVAML")
+structure.model1.nlv.pr <- structure.model1.final.fit %>%
+    filter(ref.epitope == "NLVPMVATV") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "NLVPMVATV")
+structure.model1.rpi.pr <- structure.model1.final.fit %>%
+    filter(ref.epitope == "RPIIRPATL") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "RPIIRPATL")
+structure.model1.ylq.pr <- structure.model1.final.fit %>%
+    filter(ref.epitope == "YLQPRTFLL") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "YLQPRTFLL")
+structure.model1.yvl.pr <- structure.model1.final.fit %>%
+    filter(ref.epitope == "YVLDHLIVV") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "YVLDHLIVV")
+structure.model1.epitope.pr <- bind_rows(structure.model1.gil.pr, structure.model1.gil.yvl.pr, structure.model1.glc.pr, structure.model1.nlv.pr, structure.model1.rpi.pr, structure.model1.ylq.pr, structure.model1.yvl.pr) %>%
+    getfbeta()
+label.data <- structure.model1.epitope.pr %>%
+    group_by(epitope) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+structure.model1.epitope.pr %>%
+    ggplot(aes(x = recall, y = precision, col = epitope)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "FBeta = ", round(fbeta, 2))), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.1, end = .9)
+
+ggsave(paste0(out.path, "structure_model1_pr_per_epitope.png"), width = 10, height = 10)
+
+sequence.model1.gil.pr <- sequence.model1.final.fit %>%
+    filter(ref.epitope == "GILGFVFTL") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "GILGFVFTL")
+sequence.model1.gil.yvl.pr <- sequence.model1.final.fit %>% 
+    filter(ref.epitope == "GILGFVFTL_YVLDHLIVV") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "GILGFVFTL_YVLDHLIVV")
+sequence.model1.glc.pr <- sequence.model1.final.fit %>%
+    filter(ref.epitope == "GLCTLVAML") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "GLCTLVAML")
+sequence.model1.nlv.pr <- sequence.model1.final.fit %>%
+    filter(ref.epitope == "NLVPMVATV") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "NLVPMVATV")
+sequence.model1.rpi.pr <- sequence.model1.final.fit %>%
+    filter(ref.epitope == "RPIIRPATL") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "RPIIRPATL")
+sequence.model1.ylq.pr <- sequence.model1.final.fit %>%
+    filter(ref.epitope == "YLQPRTFLL") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "YLQPRTFLL")
+sequence.model1.yvl.pr <- sequence.model1.final.fit %>%
+    filter(ref.epitope == "YVLDHLIVV") %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(epitope = "YVLDHLIVV")
+sequence.model1.epitope.pr <- bind_rows(sequence.model1.gil.pr, sequence.model1.gil.yvl.pr, sequence.model1.glc.pr, sequence.model1.nlv.pr, sequence.model1.rpi.pr, sequence.model1.ylq.pr, sequence.model1.yvl.pr) %>%
+    getfbeta()
+label.data <- sequence.model1.epitope.pr %>%
+    group_by(epitope) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+sequence.model1.epitope.pr %>%
+    ggplot(aes(x = recall, y = precision, col = epitope)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "FBeta = ", round(fbeta, 2))), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.1, end = .9)
+
+ggsave(paste0(out.path, "sequence_model1_pr_per_epitope.png"), width = 10, height = 10)
+
+# All strategies and epitopes combined (messy but informative, for now)
+# Combined model is solid line
+# Structure model is dashed line
+# Sequence model is dotted line
+model1.epitope.pr <- bind_rows(combined.model1.epitope.pr %>% mutate(model = "Combined"), structure.model1.epitope.pr %>% mutate(model = "Structure"), sequence.model1.epitope.pr %>% mutate(model = "Sequence"))
+label.data <- model1.epitope.pr %>%
+    group_by(epitope, model) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+model1.epitope.pr %>%
+    ggplot(aes(x = recall, y = precision, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.5) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_pr_per_epitope.png"), width = 20, height = 20)

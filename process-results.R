@@ -10,12 +10,15 @@
 library(tidyverse)
 
 # Specify paths
-negative.data.path <- "./results/negative/apbs/"
-positive.data.path <- "./results/positive/apbs"
-out.path <- "./analysis/apbs"
+# negative.data.path <- "./results/negative/apbs/"
+# positive.data.path <- "./results/positive/apbs"
+# out.path <- "./analysis/apbs"
 # negative.data.path <- "./results/negative/easymifs/CMET"
 # positive.data.path <- "./results/positive/easymifs/CMET"
 # out.path <- "./analysis/easymifs/CMET"
+negative.data.path <- "./results/negative/easymifs/OP"
+positive.data.path <- "./results/positive/easymifs/OP"
+out.path <- "./analysis/easymifs/OP"
 
 # Make analysis directory
 dir.create(out.path, showWarnings = FALSE, recursive = TRUE)

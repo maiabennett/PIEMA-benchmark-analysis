@@ -16,7 +16,8 @@ library(ggfortify)
 library(factoextra)
 
 # Set working directory
-out.path <- "./analysis/apbs"
+# out.path <- "./analysis/apbs"
+out.path <- "./analysis/easymifs/OP"
 
 # Load data
 all.data <- read.csv(paste0(out.path, "/final_all_kernel_data.csv"))
@@ -279,6 +280,29 @@ ggplot(all.receptor.data.faceted, aes(x = full.similarity, color = type)) +
     facet_wrap(~ epitope)
 
 ggsave(paste0(out.path, "/density_plot_full_sequence_similarity_per_epitope.png"), width = 6, height = 4)
+
+# Average KAS per receptor
+ggplot(all.receptor.data, aes(x = avg.kdist, color = type)) +
+    geom_density() +
+    labs(title = "Average KAS per receptor:receptor pair",
+         x = "Average KAS",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_average_kas_values.png"), width = 6, height = 4)
+
+# Average KAS per receptor, faceted by epitope
+ggplot(all.receptor.data.faceted, aes(x = avg.kdist, color = type)) +
+    geom_density() +
+    labs(title = "Average KAS per receptor:receptor pair, faceted by epitope",
+         x = "Average KAS",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal() +
+    facet_wrap(~ epitope)
+
+ggsave(paste0(out.path, "/density_plot_average_kas_values_per_epitope.png"), width = 6, height = 4)
 
 # Point plots
 # Top KAS value per reference receptor epitope (x axis) colored by sample receptor epitope 
