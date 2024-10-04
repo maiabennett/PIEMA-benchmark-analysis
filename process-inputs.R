@@ -17,11 +17,13 @@ high.confidence <- read.csv("./data/high-confidence-paired-sequences.csv")
 compare.cdrs <- high.confidence %>%
     mutate(Compare = paste0(CDR3a, CDR3b))
 
-# Filter out sequences with > 90% similarity
+# Filter out sequences with > 90% CDR3 similarity
 high.confidence.similarity.90 <- filterSequenceSimilarity(compare.cdrs, "Compare", 0.9)
 data.frame(Distinct_values = sapply(high.confidence.similarity.90, function(x) length(unique(x))))
 
 write.csv(high.confidence.similarity.90 %>% select(-Compare), "./data/high-confidence-similarity-90-paired-sequences.csv", row.names = FALSE)
+
+# Filter out sequences with > 90% full sequence similarity
 
 # Generate negative data with specified epitope list (generates evenly distributed data for epitopes)
 # This list contains all epitopes with > 50 receptors in 90% similarity high confidence dataset

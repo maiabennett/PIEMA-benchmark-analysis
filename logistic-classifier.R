@@ -730,6 +730,7 @@ ggsave(paste0(out.path, "sequence_model1_roc_per_epitope.png"), width = 10, heig
 # Combined model is solid line
 # Structure model is dashed line
 # Sequence model is dotted line
+# MAKE PER EPITOPE NOT PER MODEL STRATEGY
 model1.epitope.roc <- bind_rows(combined.model1.epitope.roc %>% mutate(model = "Combined"), structure.model1.epitope.roc %>% mutate(model = "Structure"), sequence.model1.epitope.roc %>% mutate(model = "Sequence"))
 label.data <- model1.epitope.roc %>%
     group_by(epitope, model) %>%
