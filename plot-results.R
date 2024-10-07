@@ -16,8 +16,9 @@ library(ggfortify)
 library(factoextra)
 
 # Set working directory
-# out.path <- "./analysis/apbs"
-out.path <- "./analysis/easymifs/OP"
+# out.path <- "./analysis/apbs/run1"
+# out.path <- "./analysis/easymifs/run1/OP"
+out.path <- "./analysis/apbs/run2"
 
 # Load data
 all.data <- read.csv(paste0(out.path, "/final_all_kernel_data.csv"))
@@ -34,6 +35,10 @@ all.data.faceted <- all.data %>%
 all.data.minus.cross <- all.data.faceted %>%
     filter(!str_detect(epitope, "_"))
 
+all.data.minus.nlv <- all.data.faceted %>%
+    filter(ref.epitope != "NLVPMVATV") %>%
+    filter(samp.epitope != "NLVPMVATV")
+
 all.receptor.data <- read.csv(paste0(out.path, "/final_receptor_data.csv"))
 
 # Faceted data for epitope plots
@@ -45,7 +50,15 @@ all.receptor.data.faceted <- all.receptor.data %>%
             mutate(epitope = samp.epitope)
     )
 
+all.receptor.data.minus.nlv <- all.receptor.data.faceted %>%
+    filter(ref.epitope != "NLVPMVATV") %>%
+    filter(samp.epitope != "NLVPMVATV")
+
 all.data.master <- read.csv(paste0(out.path, "/results_master.csv"))
+
+all.data.master.minus.nlv <- all.data.master %>%
+    filter(ref.epitope != "NLVPMVATV") %>%
+    filter(samp.epitope != "NLVPMVATV")
 
 # All plots
 # Density plots
@@ -60,6 +73,17 @@ ggplot(all.data, aes(x = kdist, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_kas_values.png"), width = 6, height = 4)
 
+# All minus NLV
+ggplot(all.data.minus.nlv, aes(x = kdist, color = type)) +
+    geom_density() +
+    labs(title = "Density plot of KAS values, not including NLVPMVATV epitope",
+                x = "KAS",
+                y = "Density",
+                color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_kas_values_minus_nlv.png"), width = 6, height = 4)
+
 # KAS scores for all kernel matches, faceted by epitope
 ggplot(all.data.faceted, aes(x = kdist, color = type)) +
     geom_density() +
@@ -72,6 +96,17 @@ ggplot(all.data.faceted, aes(x = kdist, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_kas_values_per_epitope.png"), width = 6, height = 4)
 
+# Minus NLV
+ggplot(all.data.minus.nlv, aes(x = kdist, color = type)) +
+    geom_density() +
+    labs(title = "Density plot of KAS values by epitope",
+         x = "KAS",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_kas_values_per_epitope_minus_nlv.png"), width = 6, height = 4)
+
 # Spearman correlation for all kernel matches
 ggplot(all.data, aes(x = corr, color = type)) +
     geom_density() +
@@ -80,7 +115,7 @@ ggplot(all.data, aes(x = corr, color = type)) +
          y = "Density",
          color = "Receptor:receptor pair type") +
     theme_minimal() +
-    xlim(0, 1)
+    xlim(0.5, 1)
 
 ggsave(paste0(out.path, "/density_plot_spearman_correlation.png"), width = 6, height = 4)
 
@@ -92,7 +127,7 @@ ggplot(all.data.faceted, aes(x = corr, color = type)) +
          y = "Density",
          color = "Receptor:receptor pair type") +
     theme_minimal() +
-    xlim(0, 1) + 
+    xlim(0.5, 1) + 
     facet_wrap(~ epitope)
 
 ggsave(paste0(out.path, "/density_plot_spearman_correlation_per_epitope.png"), width = 6, height = 4)
@@ -154,6 +189,17 @@ ggplot(all.data, aes(x = patDist, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_subgraph_euclidean_distance.png"), width = 6, height = 4)
 
+# Minus NLV
+ggplot(all.data.minus.nlv, aes(x = patDist, color = type)) +
+    geom_density() +
+    labs(title = "Subgraph Euclidean distance for all kernel matches",
+         x = "Subgraph Euclidean distance",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_subgraph_euclidean_distance_minus_nlv.png"), width = 6, height = 4)
+
 # Subgraph Euclidean distance, faceted by epitope
 ggplot(all.data.faceted, aes(x = patDist, color = type)) +
     geom_density() +
@@ -176,6 +222,17 @@ ggplot(all.receptor.data, aes(x = top.kdist, color = type)) +
     theme_minimal()
 
 ggsave(paste0(out.path, "/density_plot_top_kas_values.png"), width = 6, height = 4)
+
+# Minus NLV
+ggplot(all.receptor.data.minus.nlv, aes(x = top.kdist, color = type)) +
+    geom_density() +
+    labs(title = "Density plot of top KAS values for each receptor:receptor pair, not including NLVPMVATV epitope",
+         x = "KAS",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_top_kas_values_minus_nlv.png"), width = 6, height = 4)
 
 # Top KAS values per receptor:receptor pair, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = top.kdist, color = type)) +
@@ -200,6 +257,17 @@ ggplot(all.receptor.data, aes(x = count, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_kernel_match_counts.png"), width = 6, height = 4)
 
+# Minus NLV
+ggplot(all.receptor.data.minus.nlv, aes(x = count, color = type)) +
+    geom_density() +
+    labs(title = "Kernel match counts per receptor:receptor pair",
+         x = "Count",
+         y = "Density",
+         fill = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_kernel_match_counts_minus_nlv.png"), width = 6, height = 4)
+
 # Number of kernel matches per receptor:receptor pair, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = count, color = type)) +
     geom_density() +
@@ -222,6 +290,17 @@ ggplot(all.receptor.data, aes(x = CDR3.similarity, color = type)) +
     theme_minimal()
 
 ggsave(paste0(out.path, "/density_plot_cdr3_sequence_similarity.png"), width = 6, height = 4)
+
+# Minus NLV
+ggplot(all.receptor.data.minus.nlv, aes(x = CDR3.similarity, color = type)) +
+    geom_density() +
+    labs(title = "CDR3 sequence similarity for each receptor:receptor pair",
+         x = "CDR3 sequence similarity",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_cdr3_sequence_similarity_minus_nlv.png"), width = 6, height = 4)
 
 # CDR3 sequence similarity, faceted by epitope- shows difference in per-epitope performance is not necessarily just a result of CDR3 similarity, but is definitely related (same trends but not as strong)
 ggplot(all.receptor.data.faceted, aes(x = CDR3.similarity, color = type)) +
@@ -246,6 +325,17 @@ ggplot(all.receptor.data, aes(x = CDR.similarity, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_cdr_sequence_similarity.png"), width = 6, height = 4)
 
+# Minus NLV
+ggplot(all.receptor.data.minus.nlv, aes(x = CDR.similarity, color = type)) +
+    geom_density() +
+    labs(title = "CDR sequence similarity for each receptor:receptor pair",
+         x = "CDR sequence similarity",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_cdr_sequence_similarity_minus_nlv.png"), width = 6, height = 4)
+
 # CDR sequence similarity, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = CDR.similarity, color = type)) +
     geom_density() +
@@ -268,6 +358,17 @@ ggplot(all.receptor.data, aes(x = full.similarity, color = type)) +
     theme_minimal()
 
 ggsave(paste0(out.path, "/density_plot_full_sequence_similarity.png"), width = 6, height = 4)
+
+# Minus NLV
+ggplot(all.receptor.data.minus.nlv, aes(x = full.similarity, color = type)) +
+    geom_density() +
+    labs(title = "Full sequence similarity for each receptor:receptor pair",
+         x = "Full sequence similarity",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_full_sequence_similarity_minus_nlv.png"), width = 6, height = 4)
 
 # Full sequence similarity, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = full.similarity, color = type)) +
@@ -292,6 +393,17 @@ ggplot(all.receptor.data, aes(x = avg.kdist, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_average_kas_values.png"), width = 6, height = 4)
 
+# Minus NLV
+ggplot(all.receptor.data.minus.nlv, aes(x = avg.kdist, color = type)) +
+    geom_density() +
+    labs(title = "Average KAS per receptor:receptor pair",
+         x = "Average KAS",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_average_kas_values_minus_nlv.png"), width = 6, height = 4)
+
 # Average KAS per receptor, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = avg.kdist, color = type)) +
     geom_density() +
@@ -303,6 +415,40 @@ ggplot(all.receptor.data.faceted, aes(x = avg.kdist, color = type)) +
     facet_wrap(~ epitope)
 
 ggsave(paste0(out.path, "/density_plot_average_kas_values_per_epitope.png"), width = 6, height = 4)
+
+# Median subgraph KAS
+ggplot(all.receptor.data, aes(x = top.med_scr, color = type)) +
+    geom_density() +
+    labs(title = "Median subgraph KAS per receptor:receptor pair",
+         x = "Median subgraph KAS",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_median_subgraph_kas_values.png"), width = 6, height = 4)
+
+# Minus NLV
+ggplot(all.receptor.data.minus.nlv, aes(x = top.med_scr, color = type)) +
+    geom_density() +
+    labs(title = "Median subgraph KAS per receptor:receptor pair",
+         x = "Median subgraph KAS",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/density_plot_median_subgraph_kas_values_minus_nlv.png"), width = 6, height = 4)
+
+# Median subgraph KAS, faceted by epitope
+ggplot(all.receptor.data.faceted, aes(x = top.med_scr, color = type)) +
+    geom_density() +
+    labs(title = "Median subgraph KAS per receptor:receptor pair, faceted by epitope",
+         x = "Median subgraph KAS",
+         y = "Density",
+         color = "Receptor:receptor pair type") +
+    theme_minimal() +
+    facet_wrap(~ epitope)
+
+ggsave(paste0(out.path, "/density_plot_median_subgraph_kas_values_per_epitope.png"), width = 6, height = 4)
 
 # Point plots
 # Top KAS value per reference receptor epitope (x axis) colored by sample receptor epitope 
@@ -1154,10 +1300,48 @@ fviz_pca_ind(pca.result, col.ind = pca.data$type, geom = "point", addEllipses=TR
 
 ggsave(paste0(out.path, "/pca_plot_individual_factor_map.png"), width = 6, height = 4)
 
-# PCA on all data and features
+# PCA of all features (top KAS, average KAS, Spearman correlation, Euclidean distance, subgraph shape similarity, average number of kernels per pairing) without NLV data
 # Select data
-pca.data <- all.receptor.data %>% 
-    select(ref.epitope, samp.epitope, type, top.kdist, avg.kdist, avg.distance, avg.corr, top.shapSim, count, CDR3.similarity, full.similarity)
+pca.data <- all.data.master.minus.nlv %>%
+    filter(samp.epitope != "Combined") %>%
+    select(ref.epitope, samp.epitope, type, avg.top.kdist.per.receptor.pair, avg.kdist.per.receptor.pair, avg.corr.per.receptor.pair, avg.distance.per.receptor.pair, avg.subgraph.shape.sim, avg.kernels.per.receptor.pair, avg.CDR3.sequence.sim, avg.full.sequence.sim)
+
+# Perform PCA
+pca.result <- prcomp(pca.data %>% select(-ref.epitope, -samp.epitope, -type), scale. = TRUE)
+
+# Plot PCA
+autoplot(pca.result, data = pca.data, colour = 'type') +
+    labs(title = "PCA of all features",
+            x = "Principal Component 1",
+            y = "Principal Component 2",
+            color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/pca_plot_minus_NLV.png"), width = 6, height = 4)
+
+autoplot(pca.result, data = pca.data, colour = 'type', loadings = TRUE, loadings.label = TRUE, loadings.label.size = 3) +
+    labs(title = "PCA of all features, with eigenvectors",
+            x = "Principal Component 1",
+            y = "Principal Component 2",
+            color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/pca_plot_with_eigenvectors_minus_NLV.png"), width = 6, height = 4)
+
+fviz_pca_ind(pca.result, col.ind = pca.data$type, geom = "point", addEllipses=TRUE, ellipse.level=0.95) +
+    labs(title = "PCA of all features, individual factor map",
+            x = "Principal Component 1",
+            y = "Principal Component 2",
+            color = "Receptor:receptor pair type") +
+    theme_minimal()
+
+ggsave(paste0(out.path, "/pca_plot_individual_factor_map_minus_NLV.png"), width = 6, height = 4)
+
+
+# PCA on all data and features without NLV data
+# Select data
+pca.data <- all.receptor.data.minus.nlv %>% 
+    select(ref.epitope, samp.epitope, type, top.kdist, avg.kdist, avg.distance, avg.corr, top.shapSim, count, CDR3.similarity, full.similarity) 
 
 # Perform PCA
 pca.result <- prcomp(pca.data %>% select(-ref.epitope, -samp.epitope, -type), scale. = TRUE)

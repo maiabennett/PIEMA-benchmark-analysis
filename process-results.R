@@ -10,15 +10,18 @@
 library(tidyverse)
 
 # Specify paths
-# negative.data.path <- "./results/negative/apbs/"
-# positive.data.path <- "./results/positive/apbs"
-# out.path <- "./analysis/apbs"
-# negative.data.path <- "./results/negative/easymifs/CMET"
-# positive.data.path <- "./results/positive/easymifs/CMET"
-# out.path <- "./analysis/easymifs/CMET"
-negative.data.path <- "./results/negative/easymifs/OP"
-positive.data.path <- "./results/positive/easymifs/OP"
-out.path <- "./analysis/easymifs/OP"
+# negative.data.path <- "./results/run1/negative/apbs/"
+# positive.data.path <- "./results/run1/positive/apbs"
+# out.path <- "./analysis/apbs/run1"
+# negative.data.path <- "./results/run1/negative/easymifs/CMET"
+# positive.data.path <- "./results/run1/positive/easymifs/CMET"
+# out.path <- "./analysis/easymifs/run1/CMET"
+# negative.data.path <- "./results/run1/negative/easymifs/OP"
+# positive.data.path <- "./results/run1/positive/easymifs/OP"
+# out.path <- "./analysis/easymifs/run1/OP"
+negative.data.path <- "./results/run2/negative/"
+positive.data.path <- "./results/run2/positive"
+out.path <- "./analysis/apbs/run2"
 
 # Make analysis directory
 dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
@@ -95,9 +98,18 @@ count.receptor.data <- count.receptor.data %>%
     mutate(positive = ifelse(epitope == "YVLDHLIVV", positive + count.receptor.data$positive[count.receptor.data$epitope == "GILGFVFTL_YVLDHLIVV"], positive)) %>%
     filter(epitope != "GILGFVFTL_YVLDHLIVV")
 
+# Additionally, for positive data, add data counts for a new table
+count.method.data <- unique.receptor.data %>%
+    mutate(method = str_extract(id, "^[^_]+")) %>%
+    filter(method != "decoy") %>%
+    group_by(epitope, method) %>%
+    summarise(count = n_distinct(id)) %>%
+    pivot_wider(names_from = method, values_from = count, values_fill = list(count = 0))
+
 # Write data 
 write.csv(unique.receptor.data, file = paste0(out.path, "/final_unique_receptors.csv"), row.names = FALSE)
 write.csv(count.receptor.data, file = paste0(out.path, "/final_receptor_counts.csv"), row.names = FALSE)
+write.csv(count.method.data, file = paste0(out.path, "/final_method_counts.csv"), row.names = FALSE)
 
 
 # Separate positive data into true positive matches (same epitope) and unlikely matches (different epitopes)
@@ -153,8 +165,10 @@ all.receptor.data <- all.receptor.data %>%
 
 # Join all data with initial data (for sequence similarity calculation)
 # Import initial data
-positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences.csv") 
-negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences.csv")
+# positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences.csv") 
+# negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences.csv")
+positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences-full.csv") 
+negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences-full.csv")
 reference.data <- positive.reference.data %>%
     select(all_of(names(negative.reference.data))) %>%
     rbind(negative.reference.data) %>% 
@@ -186,6 +200,9 @@ all.receptor.data <- all.receptor.data %>%
     select(-CDR1a.ref, -CDR2a.ref, -CDR2.5a.ref, -CDR1b.ref, -CDR2b.ref, -CDR2.5b.ref,
         -CDR1a.samp, -CDR2a.samp, -CDR2.5a.samp, -CDR1b.samp, -CDR2b.samp, -CDR2.5b.samp,
         -full.seq.ref, -full.seq.samp, -CDRcombined.ref, -CDRcombined.samp, -CDR3combined.ref, -CDR3combined.samp)
+
+all.receptor.data <- all.receptor.data %>%
+    filter(!(ref.epitope == "YVLDHLIVV" & samp.epitope == "GILGFVFTL" & type == "Decoy receptor pairs"))
 
 # Write final data to file
 write.csv(all.receptor.data, file = paste0(out.path, "/final_receptor_data.csv"), row.names = FALSE)
@@ -241,6 +258,10 @@ all.data.master <- bind_rows(all.data.master,
         type == "True receptor pairs" ~ "True positive",
         TRUE ~ samp.epitope
     ))
+
+# Remove erroneous YVL-GIL decoys
+all.data.master <- all.data.master %>%
+    filter(!(ref.epitope == "YVLDHLIVV" & samp.epitope == "GILGFVFTL" & type == "Decoy receptor pairs"))
 
 # Export data
 write.csv(all.data.master, file = paste0(out.path, "/results_master.csv"), row.names = FALSE)

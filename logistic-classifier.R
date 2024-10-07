@@ -18,7 +18,13 @@ library(broom)
 library(viridis)
 library(ggrepel)
 
-out.path <- "./analysis/classifier/"
+# out.path <- "./analysis/clas/sifier/run1/7-feature-set/with-NLV/"
+# out.path <- "./analysis/classifier/run1/7-feature-set/without-NLV/"
+# out.path <- "./analysis/classifier/run1/5-feature-set/"
+# out.path <- "./analysis/classifier/run2/with-NLV/"
+# out.path <- "./analysis/classifier/run2/without-NLV/"
+input.path <- "./analysis/apbs/run1/"
+# input.path <- "./analysis/apbs/run2/"
 
 # Save and load the workspace
 save.image(file = "workspace.RData")
@@ -31,11 +37,14 @@ load(file = "workspace.RData")
 # 2. A model that uses all data, including "True binding pairs" (positive data) and "Decoy binding pairs" and "Unlikely binding pairs" (negative data)
 
 # Load the data
-piema.data <- read.csv("./analysis/apbs/final_receptor_data.csv") %>%
+piema.data <- read.csv(paste0(input.path, "final_receptor_data.csv")) %>%
     dplyr::rename(top.kas = top.kdist, top.spearman = top.corr, top.euc.dist = top.distance, 
         top.sg.euc.dist = top.patDist, top.cosine.sim = top.shapSim, top.sg.median.kas = top.med_scr, 
         binding.pair.type = type, avg.euc.dist = avg.distance, avg.kas = avg.kdist, avg.spearman = avg.corr,
         kernel.count = count, pair.id = id, top.sg.id = top.sg_group)
+piema.data <- piema.data %>%
+    filter(ref.epitope != "NLVPMVATV") %>%
+    filter(samp.epitope != "NLVPMVATV")
 
 # Prepare the data, adding a column to denote whether the receptor pairs share binding specificity (Yes) or not (No)
 # First,  we only want to use the "True binding pairs" and "Decoy binding pairs"
@@ -50,8 +59,8 @@ model2.data <- piema.data %>%
     mutate(shared.specificity = as.factor(shared.specificity))
 
 model1.long <- model1.data %>% 
-    select(shared.specificity, top.kas, avg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity) %>%
-    pivot_longer(cols = c(top.kas, avg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity), names_to = "feature", values_to = "value")
+    select(shared.specificity, top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity) %>%
+    pivot_longer(cols = c(top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity), names_to = "feature", values_to = "value")
 
 ggplot(model1.long, aes(x = shared.specificity, y = value, fill = feature)) +
     geom_boxplot() +
@@ -65,8 +74,8 @@ ggplot(model1.long, aes(x = shared.specificity, y = value, fill = feature)) +
 ggsave(paste0(out.path, "model1_feature_boxplot.png"), width = 20, height = 10)
 
 model2.long <- model2.data %>%
-    select(shared.specificity, top.kas, avg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity) %>%
-    pivot_longer(cols = c(top.kas, avg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity), names_to = "feature", values_to = "value")
+    select(shared.specificity, top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity) %>%
+    pivot_longer(cols = c(top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity), names_to = "feature", values_to = "value")
 
 ggplot(model2.long, aes(x = shared.specificity, y = value, fill = feature)) +
     geom_boxplot() +
@@ -101,40 +110,45 @@ negative.class <- "No"
 # Add all features to structure, try additional combined features as well
 
 # Seven feature set
+# Change euclidean to subgraph euclidean, top subgraph to top KAS
+# combined.model.form <- shared.specificity ~ top.sg.euc.dist + top.kas + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
+# Run 1 final/best recipe
 combined.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
 # Six feature set
 # combined.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity + full.similarity
 # Five feature set
 # combined.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity
 # Structure-only model formula
-structure.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count
+structure.model.form <- shared.specificity ~ top.sg.euc.dist + top.kas + avg.spearman + top.cosine.sim + kernel.count
 # Sequence-only model formula
 sequence.model.form <- shared.specificity ~ CDR3.similarity + full.similarity
 
 # Define F beta metric
-f_meas <- function(data, truth, estimate, na_rm = TRUE, ...) {
-    yardstick::f_meas(
-        data = data,
-        truth = !!rlang::enquo(truth),
-        estimate = !!rlang::enquo(estimate),
-        beta = 0.5,
-        na_rm = na_rm,
-        ...
-    )
-}
-f_meas <- new_class_metric(f_meas, direction = "maximize")
+# f_meas <- function(data, truth, estimate, na_rm = TRUE, ...) {
+#     yardstick::f_meas(
+#         data = data,
+#         truth = !!rlang::enquo(truth),
+#         estimate = !!rlang::enquo(estimate),
+#         beta = 0.5,
+#         na_rm = na_rm,
+#         ...
+#     )
+# }
+# f_meas <- new_class_metric(f_meas, direction = "maximize")
 
-classification.metrics <- metric_set(yardstick::accuracy, 
-                                     yardstick::kap, 
-                                     yardstick::roc_auc, 
-                                     yardstick::mn_log_loss, 
-                                     yardstick::sens, 
-                                     yardstick::spec, 
-                                     #yardstick::f_meas,
-                                     yardstick::precision,
-                                     yardstick::recall,
-                                     yardstick::bal_accuracy,
-                                     f_meas) 
+classification.metrics <- metric_set(
+    yardstick::accuracy, 
+    yardstick::kap, 
+    yardstick::roc_auc, 
+    yardstick::mn_log_loss, 
+    yardstick::sens, 
+    yardstick::spec, 
+    yardstick::f_meas,
+    yardstick::precision,
+    yardstick::recall,
+    yardstick::bal_accuracy,
+    # f_meas
+    ) 
 
 # Define the recipe for the logistic regression models
 combined.model1.recipe <- recipe(combined.model.form, data = model1.train) %>%
@@ -319,8 +333,9 @@ sequence.model1.train.metrics <- sequence.model1.fit %>%
 sequence.model2.train.metrics <- sequence.model2.fit %>%
     collect_metrics()
 
-# Fetch the best model by F beta metric 
-metric.for.selection <- "f_meas"
+# Fetch the best model by the specified metric 
+# metric.for.selection <- "f_meas"
+metric.for.selection <- "recall"
 
 combined.model1.best.fit <- combined.model1.fit %>%
     fit_best(metric = metric.for.selection)
@@ -406,6 +421,8 @@ model2.metrics <- combined.model2.test.metrics %>%
         dplyr::rename(sequence.estimate = .estimate))
 
 # Save the results
+write.csv(combined.model1.train.metrics, paste0(out.path, "combined_model1_train_metrics.csv"), row.names = FALSE)
+write.csv(combined.model2.train.metrics, paste0(out.path, "combined_model2_train_metrics.csv"), row.names = FALSE)
 write.csv(combined.model1.final.fit, paste0(out.path, "combined_model1_predictions.csv"), row.names = FALSE)
 write.csv(combined.model2.final.fit, paste0(out.path, "combined_model2_predictions.csv"), row.names = FALSE)
 write.csv(structure.model1.final.fit, paste0(out.path, "structure_model1_predictions.csv"), row.names = FALSE)
@@ -568,7 +585,7 @@ model2.epitope.metrics <- combined.model2.epitope.metrics %>%
 write.csv(model1.epitope.metrics, paste0(out.path, "model1_epitope_metrics.csv"), row.names = FALSE)
 write.csv(model2.epitope.metrics, paste0(out.path, "model2_epitope_metrics.csv"), row.names = FALSE)
 
-# Per-epitope ROCs
+# Per-model, per-epitope ROCs
 # Define function to label points at best fbeta
 getfbeta <- function(data, beta = 0.5) {
     if ("specificity" %in% names(data)) {
@@ -726,6 +743,148 @@ sequence.model1.epitope.roc %>%
 
 ggsave(paste0(out.path, "sequence_model1_roc_per_epitope.png"), width = 10, height = 10)
 
+# Per-epitope, per-model ROC curves
+# Store epitope colors from above plots
+epitopes <- c("GILGFVFTL", "GILGFVFTL_YVLDHLIVV", "GLCTLVAML", "NLVPMVATV", "RPIIRPATL", "YLQPRTFLL", "YVLDHLIVV")
+epitope.colors <- viridis(length(epitopes), option = "plasma", begin = 0.1, end = 0.9)
+epitope.colors <- setNames(epitope.colors, epitopes)
+
+# Bind data
+model1.gil.roc <- bind_rows(combined.model1.gil.roc %>% mutate(model = "Combined"), structure.model1.gil.roc %>% mutate(model = "Structure"), sequence.model1.gil.roc %>% mutate(model = "Sequence")) %>%
+    getfbeta()
+label.data <- model1.gil.roc %>% 
+    group_by(epitope, model) %>% 
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>% 
+    slice(1)
+model1.gil.roc %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.5) +
+    geom_abline(lty = 3) + 
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("GILGFVFTL" = epitope.colors[["GILGFVFTL"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_GIL_roc.png"), width = 20, height = 20)
+
+model1.gil.yvl.roc <- bind_rows(combined.model1.gil.yvl.roc %>% mutate(model = "Combined"), structure.model1.gil.yvl.roc %>% mutate(model = "Structure"), sequence.model1.gil.yvl.roc %>% mutate(model = "Sequence"))
+label.data <- model1.gil.yvl.roc %>% 
+    group_by(epitope, model) %>% 
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>% 
+    slice(1)
+model1.gil.yvl.roc %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity,  col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.5) +
+    geom_abline(lty = 3) + 
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("GILGFVFTL_YVLDHLIVV" = epitope.colors[["GILGFVFTL_YVLDHLIVV"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_GIL-YVL_roc.png"), width = 20, height = 20)
+
+model1.glc.roc <- bind_rows(combined.model1.glc.roc %>% mutate(model = "Combined"), structure.model1.glc.roc %>% mutate(model = "Structure"), sequence.model1.glc.roc %>% mutate(model = "Sequence"))
+label.data <- model1.glc.roc %>% 
+    group_by(epitope, model) %>% 
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>% 
+    slice(1)
+model1.glc.roc %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.5) +
+    geom_abline(lty = 3) + 
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("GLCTLVAML" = epitope.colors[["GLCTLVAML"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_GLC_roc.png"), width = 20, height = 20)
+
+model1.nlv.roc <- bind_rows(combined.model1.nlv.roc %>% mutate(model = "Combined"), structure.model1.nlv.roc %>% mutate(model = "Structure"), sequence.model1.nlv.roc %>% mutate(model = "Sequence"))
+label.data <- model1.nlv.roc %>% 
+    group_by(epitope, model) %>% 
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>% 
+    slice(1)
+model1.nlv.roc %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.5) +
+    geom_abline(lty = 3) + 
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("NLVPMVATV" = epitope.colors[["NLVPMVATV"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_NLV_roc.png"), width = 20, height = 20)
+
+model1.rpi.roc <- bind_rows(combined.model1.rpi.roc %>% mutate(model = "Combined"), structure.model1.rpi.roc %>% mutate(model = "Structure"), sequence.model1.rpi.roc %>% mutate(model = "Sequence"))
+label.data <- model1.rpi.roc %>% 
+    group_by(epitope, model) %>% 
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>% 
+    slice(1)
+model1.rpi.roc %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.5) +
+    geom_abline(lty = 3) + 
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("RPIIRPATL" = epitope.colors[["RPIIRPATL"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_RPI_roc.png"), width = 20, height = 20)
+
+model1.ylq.roc <- bind_rows(combined.model1.ylq.roc %>% mutate(model = "Combined"), structure.model1.ylq.roc %>% mutate(model = "Structure"), sequence.model1.ylq.roc %>% mutate(model = "Sequence"))
+label.data <- model1.ylq.roc %>% 
+    group_by(epitope, model) %>% 
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>% 
+    slice(1)
+model1.ylq.roc %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.5) +
+    geom_abline(lty = 3) + 
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("YLQPRTFLL" = epitope.colors[["YLQPRTFLL"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_YLQ_roc.png"), width = 20, height = 20)
+
+model1.yvl.roc <- bind_rows(combined.model1.yvl.roc %>% mutate(model = "Combined"), structure.model1.yvl.roc %>% mutate(model = "Structure"), sequence.model1.yvl.roc %>% mutate(model = "Sequence"))
+label.data <- model1.yvl.roc %>% 
+    group_by(epitope, model) %>% 
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>% 
+    slice(1)
+model1.yvl.roc %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, col = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.5) +
+    geom_abline(lty = 3) + 
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("YVLDHLIVV" = epitope.colors[["YVLDHLIVV"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_YVL_roc.png"), width = 20, height = 20)
+
+
 # All strategies and epitopes combined (messy but informative, for now)
 # Combined model is solid line
 # Structure model is dashed line
@@ -771,7 +930,7 @@ bind_rows(combined.model1.pr, structure.model1.pr, sequence.model1.pr) %>%
 
 ggsave(paste0(out.path, "model1_pr.png"), width = 10, height = 10)
 
-# Per epitope
+# Per model, per epitope
 combined.model1.gil.pr <- combined.model1.final.fit %>%
     filter(ref.epitope == "GILGFVFTL") %>%
     pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
@@ -909,6 +1068,141 @@ sequence.model1.epitope.pr %>%
     scale_color_viridis_d(option = "plasma", begin = 0.1, end = .9)
 
 ggsave(paste0(out.path, "sequence_model1_pr_per_epitope.png"), width = 10, height = 10)
+
+# Per epitope, per model
+model1.gil.pr <- bind_rows(combined.model1.gil.pr %>% mutate(model = "Combined"), structure.model1.gil.pr %>% mutate(model = "Structure"), sequence.model1.gil.pr %>% mutate(model = "Sequence")) %>%
+    getfbeta()
+label.data <- model1.gil.pr %>%
+    group_by(epitope, model) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+model1.gil.pr %>%
+    ggplot(aes(x = recall, y = precision,  col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("GILGFVFTL" = epitope.colors[["GILGFVFTL"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_GIL_pr.png"), width = 10, height = 10)
+
+model1.gil.yvl.pr <- bind_rows(combined.model1.gil.yvl.pr %>% mutate(model = "Combined"), structure.model1.gil.yvl.pr %>% mutate(model = "Structure"), sequence.model1.gil.yvl.pr %>% mutate(model = "Sequence")) %>%
+    getfbeta()
+label.data <- model1.gil.yvl.pr %>%
+    group_by(epitope, model) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+model1.gil.yvl.pr %>%
+    ggplot(aes(x = recall, y = precision, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("GILGFVFTL_YVLDHLIVV" = epitope.colors[["GILGFVFTL_YVLDHLIVV"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_GIL-YVL_pr.png"), width = 10, height = 10)
+
+model1.glc.pr <- bind_rows(combined.model1.glc.pr %>% mutate(model = "Combined"), structure.model1.glc.pr %>% mutate(model = "Structure"), sequence.model1.glc.pr %>% mutate(model = "Sequence"))   %>%
+    getfbeta()
+label.data <- model1.glc.pr %>%
+    group_by(epitope, model) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+model1.glc.pr %>%
+    ggplot(aes(x = recall, y = precision, col = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("GLCTLVAML" = epitope.colors[["GLCTLVAML"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_GLC_pr.png"), width = 10, height = 10)
+
+model1.nlv.pr <- bind_rows(combined.model1.nlv.pr %>% mutate(model = "Combined"), structure.model1.nlv.pr %>% mutate(model = "Structure"), sequence.model1.nlv.pr %>% mutate(model = "Sequence")) %>%
+    getfbeta()
+label.data <- model1.nlv.pr %>%
+    group_by(epitope, model) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+model1.nlv.pr %>%
+    ggplot(aes(x = recall, y = precision, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("NLVPMVATV" = epitope.colors[["NLVPMVATV"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_NLV_pr.png"), width = 10, height = 10)
+
+model1.rpi.pr <- bind_rows(combined.model1.rpi.pr %>% mutate(model = "Combined"), structure.model1.rpi.pr %>% mutate(model = "Structure"), sequence.model1.rpi.pr %>% mutate(model = "Sequence")) %>%
+    getfbeta()
+label.data <- model1.rpi.pr %>% 
+    group_by(epitope, model) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+model1.rpi.pr %>%
+    ggplot(aes(x = recall, y = precision, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("RPIIRPATL" = epitope.colors[["RPIIRPATL"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_RPI_pr.png"), width = 10, height = 10)
+
+model1.ylq.pr <- bind_rows(combined.model1.ylq.pr %>% mutate(model = "Combined"), structure.model1.ylq.pr %>% mutate(model = "Structure"), sequence.model1.ylq.pr %>% mutate(model = "Sequence")) %>%
+    getfbeta()
+label.data <- model1.ylq.pr %>%
+    group_by(epitope, model) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+model1.ylq.pr %>%
+    ggplot(aes(x = recall, y = precision, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("YLQPRTFLL" = epitope.colors[["YLQPRTFLL"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_YLQ_pr.png"), width = 10, height = 10)
+
+model1.yvl.pr <- bind_rows(combined.model1.yvl.pr %>% mutate(model = "Combined"), structure.model1.yvl.pr %>% mutate(model = "Structure"), sequence.model1.yvl.pr %>% mutate(model = "Sequence")) %>%
+    getfbeta()
+label.data <- model1.yvl.pr %>%
+    group_by(epitope, model) %>%
+    filter(fbeta == max(fbeta, na.rm = TRUE)) %>%
+    slice(1)
+model1.yvl.pr %>%
+    ggplot(aes(x = recall, y = precision, col = epitope, linetype = model)) + 
+    geom_path(lwd = 1.5, alpha = 0.8) +
+    geom_text_repel(data = label.data, 
+            aes(label = paste0(epitope, "\n", "(", model, ")")), 
+            vjust = -3, 
+            size = 3) + 
+    coord_equal() + 
+    scale_color_manual(values = c("YVLDHLIVV" = epitope.colors[["YVLDHLIVV"]])) +
+    scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted"))
+
+ggsave(paste0(out.path, "model1_YVL_pr.png"), width = 10, height = 10)
+
 
 # All strategies and epitopes combined (messy but informative, for now)
 # Combined model is solid line
