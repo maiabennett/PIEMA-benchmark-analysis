@@ -1,6 +1,6 @@
 # ============================================================
-# File: process-results.R
-# Description: Script for training and analyzing the PIEMA logistic regression classifier
+# File: logistic-classifier.R
+# Description: Script for training the PIEMA logistic regression classifier which produces a number of plots (feature box plots, ROC and PR curves) and outputs (metrics, coefficients) for the preliminary analysis of combined, structure, and sequence classifier approach pairings based on feature selection criteria. These plots are generated automatically but are further refined and exhibited in logistic-classifier-analysis.R, which facilitates more in-depth analysis of optimal model data curation and feature selection approaches.
 # Author: Maia Bennett-Boehm
 # University of Nebraska at Omaha
 # ============================================================
@@ -2801,7 +2801,3 @@ model2.epitope.pr %>%
 ggsave(paste0(out.path, "model2_pr_per_epitope.png"), width = 10, height = 10)
 
 
-# Combine metrics
-
-
-# Combine coefficients
