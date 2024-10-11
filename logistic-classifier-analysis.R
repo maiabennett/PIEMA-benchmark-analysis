@@ -21,322 +21,322 @@ library(scales)
 # One column with number of features (9, 7, or 5 for Combined, 7, 5 or 4 for Structure, 2 or 1 for Sequence)
 # One column with data inclusion (NLV, Yes or No)
 # One column with the metric value
-all.metrics <- read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model1_metrics.csv") %>% 
+all.metrics <- read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model1_metrics.csv") %>% 
     mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
         Features = 9, NLV = "Yes", Value = combined.estimate) %>%
     select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
     pivot_wider(names_from = Metrics, values_from = Value) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             Features = 7, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             Features = 2, NLV = "Yes", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
             Features = 9, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             Features = 7, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%  
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             Features = 2, NLV = "No", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             Features = 9, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             Features = 7, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             Features = 2, NLV = "Yes", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             Features = 9, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             Features = 7, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             Features = 2, NLV = "No", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
             Features = 7, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             Features = 5, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
             Features = 7, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             Features = 5, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             Features = 7, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             Features = 5, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             Features = 7, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model2_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model2_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             Features = 5, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model1_metrics.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model1_metrics.csv") %>% 
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
             Features = 5, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             Features = 4, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             Features = 1, NLV = "Yes", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
             Features = 5, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             Features = 4, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             Features = 1, NLV = "No", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             Features = 5, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             Features = 4, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             Features = 1, NLV = "Yes", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             Features = 5, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             Features = 4, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             Features = 1, NLV = "No", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             Features = 9, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             Features = 7, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             Features = 2, NLV = "Yes", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             Features = 9, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             Features = 7, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             Features = 2, NLV = "No", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             Features = 9, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             Features = 7, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             Features = 2, NLV = "Yes", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             Features = 9, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             Features = 7, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             Features = 2, NLV = "No", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             Features = 7, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             Features = 5, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             Features = 7, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             Features = 5, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             Features = 7, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             Features = 5, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             Features = 7, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             Features = 5, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             Features = 5, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             Features = 4, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             Features = 1, NLV = "Yes", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             Features = 5, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             Features = 4, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model1_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model1_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             Features = 1, NLV = "No", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             Features = 5, NLV = "Yes", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             Features = 4, NLV = "Yes", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             Features = 1, NLV = "Yes", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             Features = 5, NLV = "No", Value = combined.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             Features = 4, NLV = "No", Value = structure.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
         pivot_wider(names_from = Metrics, values_from = Value)) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model2_metrics.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model2_metrics.csv") %>%
         mutate(Metrics = .metric, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             Features = 1, NLV = "No", Value = sequence.estimate) %>%
         select(-.metric, -combined.estimate, -structure.estimate, -sequence.estimate) %>%
@@ -348,435 +348,435 @@ all.metrics <- read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model
 all.epitope.metrics
 
 # Combine coefficients
-all.coef.nine.features <- read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model1_coefficients.csv") %>% 
+all.coef.nine.features <- read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model1_coefficients.csv") %>% 
     mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
         NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
     select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
         -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
     pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_") %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model1_coefficients.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model1_coefficients.csv") %>% 
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model2_coefficients.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model2_coefficients.csv") %>% 
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/9-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/9-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model1_coefficients.csv") %>% 
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model1_coefficients.csv") %>% 
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/9-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/9-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate, 
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_"))
 
-all.coef.seven.features <- read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model1_coefficients.csv") %>%
+all.coef.seven.features <- read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model1_coefficients.csv") %>%
     mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
         NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
     select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
         -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
     pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_") %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/7-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/7-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/7-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/7-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_"))
 
-all.coef.five.features <- read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model1_coefficients.csv") %>%
+all.coef.five.features <- read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model1_coefficients.csv") %>%
     mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
         NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
     select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
         -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
     pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_") %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 1", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run1/5-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run1/5-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "CDR3", Model = "Model 2", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model1_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model1_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 1", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             NLV = "Yes", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             NLV = "Yes", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/with-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/with-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             NLV = "Yes", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Combined", 
             NLV = "No", Value = combined.estimate, Significance = combined.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model2_coefficients.csv") %>%
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model2_coefficients.csv") %>%
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Structure", 
             NLV = "No", Value = structure.estimate, Significance = structure.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
             -structure.p.value, -sequence.estimate, -sequence.p.value) %>%
         pivot_wider(names_from = Coefficient, values_from = c(Value, Significance), names_sep = "_")) %>%
-    rbind(read.csv("./analysis/classifier/run2/5-feature-set/without-NLV/model2_coefficients.csv") %>%  
+    rbind(read.csv("./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/model2_coefficients.csv") %>%  
         mutate(Coefficient = term, Dataset = "Full", Model = "Model 2", Approach = "Sequence", 
             NLV = "No", Value = sequence.estimate, Significance = sequence.p.value) %>%
         select(-term, -combined.estimate, -combined.p.value, -structure.estimate,
@@ -815,10 +815,10 @@ all.coef <- all.coef.combined.features %>%
     bind_rows(all.coef.sequence.features)
 
 # Save results
-write.csv(all.metrics, "./analysis/classifier/all_metrics.csv", row.names = FALSE)
-write.csv(all.coef.combined.features, "./analysis/classifier/all_coefs_combined_features.csv", row.names = FALSE)
-write.csv(all.coef.structure.features, "./analysis/classifier/all_coefs_structure_features.csv", row.names = FALSE)
-write.csv(all.coef.sequence.features, "./analysis/classifier/all_coefs_sequence_features.csv", row.names = FALSE)
+write.csv(all.metrics, "./analysis/classifier/with-cross-reactives/with-avg-eucdist/all_metrics.csv", row.names = FALSE)
+write.csv(all.coef.combined.features, "./analysis/classifier/with-cross-reactives/with-avg-eucdist/all_coefs_combined_features.csv", row.names = FALSE)
+write.csv(all.coef.structure.features, "./analysis/classifier/with-cross-reactives/with-avg-eucdist/all_coefs_structure_features.csv", row.names = FALSE)
+write.csv(all.coef.sequence.features, "./analysis/classifier/with-cross-reactives/with-avg-eucdist/all_coefs_sequence_features.csv", row.names = FALSE)
 
 
 # Plot results to identify best approaches, feature influence, etc
@@ -845,7 +845,7 @@ ggplot(
     scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/accuracy_by_dataset_and_approach_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/accuracy_by_dataset_and_approach_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -869,7 +869,7 @@ ggplot(
     scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/accuracy_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/accuracy_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
 
 # Plotting ROC_AUC
 # Model 1
@@ -894,7 +894,7 @@ ggplot(
     scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/roc_auc_by_dataset_and_approach_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/roc_auc_by_dataset_and_approach_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -918,7 +918,7 @@ ggplot(
     scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/roc_auc_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/roc_auc_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
 
 # Plotting PR_AUC
 # Model 1
@@ -943,7 +943,7 @@ ggplot(
     scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.15,0.6),oob = rescale_none)
 
-ggsave("./analysis/classifier/pr_auc_by_dataset_and_approach.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/pr_auc_by_dataset_and_approach.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -967,7 +967,7 @@ ggplot(
     scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.15,0.6),oob = rescale_none)
 
-ggsave("./analysis/classifier/pr_auc_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/pr_auc_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
 
 # Plotting recall
 # Model 1
@@ -992,7 +992,7 @@ ggplot(
     scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.35,0.6),oob = rescale_none)
 
-ggsave("./analysis/classifier/recall_by_dataset_and_approach_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/recall_by_dataset_and_approach_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1016,7 +1016,7 @@ ggplot(
     scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.35,0.6),oob = rescale_none)
 
-ggsave("./analysis/classifier/recall_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/recall_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
 
 # Precision
 # Model 1
@@ -1041,7 +1041,7 @@ ggplot(
     scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.15,0.5),oob = rescale_none)
 
-ggsave("./analysis/classifier/precision_by_dataset_and_approach_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/precision_by_dataset_and_approach_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1065,7 +1065,7 @@ ggplot(
     scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
     scale_y_continuous(limits=c(0.15,0.5),oob = rescale_none)
 
-ggsave("./analysis/classifier/precision_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/precision_by_dataset_and_approach_model2.png", width = 20, height = 15, dpi = 300)
 
 # Plotting the same metrics based on the inclusion of full sequence similarity in the model
 # Includes all structural methods (for reference), the relevant sequence method, and the relevant combined method(s)
@@ -1107,7 +1107,7 @@ ggplot(
     scale_fill_manual(values = model1.approach.colors) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/accuracy_by_dataset_full_sequence_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/accuracy_by_dataset_full_sequence_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1133,7 +1133,7 @@ ggplot(
     scale_fill_manual(values = model2.approach.colors) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/accuracy_by_dataset_full_sequence_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/accuracy_by_dataset_full_sequence_model2.png", width = 20, height = 15, dpi = 300)
 
 # Without full sequence
 # Model 1
@@ -1160,7 +1160,7 @@ ggplot(
     scale_fill_manual(values = model1.approach.colors) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/accuracy_by_dataset_cdr3_sequence_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/accuracy_by_dataset_cdr3_sequence_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1186,7 +1186,7 @@ ggplot(
     scale_fill_manual(values = model2.approach.colors) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/accuracy_by_dataset_cdr3_sequence_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/accuracy_by_dataset_cdr3_sequence_model2.png", width = 20, height = 15, dpi = 300)
 
 # ROC_AUC
 # With full sequence
@@ -1214,7 +1214,7 @@ ggplot(
     scale_fill_manual(values = model1.approach.colors) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/roc_auc_by_dataset_full_sequence_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/roc_auc_by_dataset_full_sequence_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1240,7 +1240,7 @@ ggplot(
     scale_fill_manual(values = model2.approach.colors) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/roc_auc_by_dataset_full_sequence_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/roc_auc_by_dataset_full_sequence_model2.png", width = 20, height = 15, dpi = 300)
 
 # Without full sequence
 # Model 1
@@ -1267,7 +1267,7 @@ ggplot(
     scale_fill_manual(values = model1.approach.colors) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/roc_auc_by_dataset_cdr3_sequence_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/roc_auc_by_dataset_cdr3_sequence_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1293,7 +1293,7 @@ ggplot(
     scale_fill_manual(values = model2.approach.colors) +
     scale_y_continuous(limits=c(0.45,0.65),oob = rescale_none)
 
-ggsave("./analysis/classifier/roc_auc_by_dataset_cdr3_sequence_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/roc_auc_by_dataset_cdr3_sequence_model2.png", width = 20, height = 15, dpi = 300)
 
 # PR_AUC
 # With full sequence
@@ -1321,7 +1321,7 @@ ggplot(
     scale_fill_manual(values = model1.approach.colors) +
     scale_y_continuous(limits=c(0.15,0.6),oob = rescale_none)
 
-ggsave("./analysis/classifier/pr_auc_by_dataset_full_sequence_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/pr_auc_by_dataset_full_sequence_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1347,7 +1347,7 @@ ggplot(
     scale_fill_manual(values = model2.approach.colors) +
     scale_y_continuous(limits=c(0.15,0.6),oob = rescale_none)
 
-ggsave("./analysis/classifier/pr_auc_by_dataset_full_sequence_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/pr_auc_by_dataset_full_sequence_model2.png", width = 20, height = 15, dpi = 300)
 
 # Without full sequence
 # Model 1
@@ -1374,7 +1374,7 @@ ggplot(
     scale_fill_manual(values = model1.approach.colors) +
     scale_y_continuous(limits=c(0.15,0.6),oob = rescale_none)
 
-ggsave("./analysis/classifier/pr_auc_by_dataset_cdr3_sequence_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/pr_auc_by_dataset_cdr3_sequence_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1400,7 +1400,7 @@ ggplot(
     scale_fill_manual(values = model2.approach.colors) +
     scale_y_continuous(limits=c(0.15,0.6),oob = rescale_none)
 
-ggsave("./analysis/classifier/pr_auc_by_dataset_cdr3_sequence_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/pr_auc_by_dataset_cdr3_sequence_model2.png", width = 20, height = 15, dpi = 300)
 
 # Feature coefficients
 # Convert to long format for plotting, and plot features on X, Coefficients on Y, colored by Approach + Features
@@ -1427,7 +1427,7 @@ ggplot(
     labs(title = "Feature coefficients by dataset and approach", subtitle = "Model 1: Positive vs Decoy pairs", y = "Coefficient") +
     scale_fill_manual(values = model1.approach.colors)
 
-ggsave("./analysis/classifier/combined_feature_coefficients_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/combined_feature_coefficients_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1452,7 +1452,7 @@ ggplot(
     labs(title = "Feature coefficients by dataset and approach", subtitle = "Model 2: Positive vs Unlikely and Decoy pairs", y = "Coefficient") +
     scale_fill_manual(values = model2.approach.colors)
 
-ggsave("./analysis/classifier/combined_feature_coefficients_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/combined_feature_coefficients_model2.png", width = 20, height = 15, dpi = 300)
 
 # Sequence feature sets
 # Model 1
@@ -1478,7 +1478,7 @@ ggplot(
     labs(title = "Feature coefficients by dataset and approach", subtitle = "Model 1: Positive vs Decoy pairs", y = "Coefficient") +
     scale_fill_manual(values = model1.approach.colors)
 
-ggsave("./analysis/classifier/sequence_feature_coefficients_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/sequence_feature_coefficients_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1527,7 +1527,7 @@ ggplot(
     labs(title = "Feature coefficients by dataset and approach", subtitle = "Model 1: Positive vs Decoy pairs", y = "Coefficient") +
     scale_fill_manual(values = model1.approach.colors)
 
-ggsave("./analysis/classifier/structure_feature_coefficients_model1.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/structure_feature_coefficients_model1.png", width = 20, height = 15, dpi = 300)
 
 # Model 2
 ggplot(
@@ -1552,7 +1552,7 @@ ggplot(
     labs(title = "Feature coefficients by dataset and approach", subtitle = "Model 2: Positive vs Unlikely and Decoy pairs", y = "Coefficient") +
     scale_fill_manual(values = model2.approach.colors)
 
-ggsave("./analysis/classifier/structure_feature_coefficients_model2.png", width = 20, height = 15, dpi = 300)
+ggsave("./analysis/classifier/with-cross-reactives/with-avg-eucdist/structure_feature_coefficients_model2.png", width = 20, height = 15, dpi = 300)
 
 # Per-epitope performance metrics- for top 3 performing epitopes (GIL, GLC, YVL or GIL-YVL crossreactives)
 

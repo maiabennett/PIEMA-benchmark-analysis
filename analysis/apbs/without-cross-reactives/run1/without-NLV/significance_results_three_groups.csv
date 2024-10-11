@@ -1,0 +1,27 @@
+"","Feature","Comparison","P.Value"
+"1","top.distance","True receptor pairs vs Unlikely receptor pairs",6.36744990074269e-38
+"2","top.distance","True receptor pairs vs Decoy receptor pairs",8.00489655635111e-30
+"3","top.kdist","True receptor pairs vs Unlikely receptor pairs",9.10516836561609e-58
+"4","top.kdist","True receptor pairs vs Decoy receptor pairs",1.43596366255628e-18
+"5","top.corr","True receptor pairs vs Unlikely receptor pairs",1.05541027524947e-43
+"6","top.corr","True receptor pairs vs Decoy receptor pairs",4.64528851036093e-37
+"7","top.shapSim","True receptor pairs vs Unlikely receptor pairs",1.16750751895246e-14
+"8","top.shapSim","True receptor pairs vs Decoy receptor pairs",9.43342416678357e-15
+"9","top.med_scr","True receptor pairs vs Unlikely receptor pairs",1.55949683569683e-52
+"10","top.med_scr","True receptor pairs vs Decoy receptor pairs",2.69131721529261e-24
+"11","top.patDist","True receptor pairs vs Unlikely receptor pairs",2.38150837943141e-35
+"12","top.patDist","True receptor pairs vs Decoy receptor pairs",2.5496968866952e-22
+"13","avg.distance","True receptor pairs vs Unlikely receptor pairs",9.05787433381695e-46
+"14","avg.distance","True receptor pairs vs Decoy receptor pairs",1.61662527011931e-29
+"15","avg.kdist","True receptor pairs vs Unlikely receptor pairs",1.5896353913381e-63
+"16","avg.kdist","True receptor pairs vs Decoy receptor pairs",1.6812965590938e-23
+"17","avg.corr","True receptor pairs vs Unlikely receptor pairs",7.06774934378612e-50
+"18","avg.corr","True receptor pairs vs Decoy receptor pairs",6.79017505377265e-59
+"19","count","True receptor pairs vs Unlikely receptor pairs",5.49028557106521e-53
+"20","count","True receptor pairs vs Decoy receptor pairs",3.3427379717612e-29
+"21","CDR3.similarity","True receptor pairs vs Unlikely receptor pairs",8.31615335708981e-112
+"22","CDR3.similarity","True receptor pairs vs Decoy receptor pairs",1.0603999501549e-34
+"23","CDR.similarity","True receptor pairs vs Unlikely receptor pairs",9.77225706178663e-155
+"24","CDR.similarity","True receptor pairs vs Decoy receptor pairs",3.48144369243476e-64
+"25","full.similarity","True receptor pairs vs Unlikely receptor pairs",2.64969914691945e-111
+"26","full.similarity","True receptor pairs vs Decoy receptor pairs",4.96828814923749e-56

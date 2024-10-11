@@ -16,12 +16,18 @@ library(ggfortify)
 library(factoextra)
 
 # Set working directory
-# out.path <- "./analysis/apbs/run1"
+# out.path <- "./analysis/easymifs/run1/CMET"
 # out.path <- "./analysis/easymifs/run1/OP"
-out.path <- "./analysis/apbs/run2"
+# out.path <- "./analysis/apbs/with-cross-reactives/run1"
+# out.path <- "./analysis/apbs/with-cross-reactives/run2"
+
+# out.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV"
+# out.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV"
+# out.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV"
+out.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV"
 
 # Load data
-all.data <- read.csv(paste0(out.path, "/final_all_kernel_data.csv"))
+all.data <- read.csv(paste0(out.path, "/final_all_kernels_data.csv"))
 
 # Create a combined data frame with duplicated rows for 'Unlikely binding pairs' to allow facet wrapping
 all.data.faceted <- all.data %>%
@@ -31,13 +37,6 @@ all.data.faceted <- all.data %>%
             filter(type == "Unlikely receptor paired kernels") %>%
             mutate(epitope = samp.epitope)
     )
-
-all.data.minus.cross <- all.data.faceted %>%
-    filter(!str_detect(epitope, "_"))
-
-all.data.minus.nlv <- all.data.faceted %>%
-    filter(ref.epitope != "NLVPMVATV") %>%
-    filter(samp.epitope != "NLVPMVATV")
 
 all.receptor.data <- read.csv(paste0(out.path, "/final_receptor_data.csv"))
 
@@ -50,15 +49,8 @@ all.receptor.data.faceted <- all.receptor.data %>%
             mutate(epitope = samp.epitope)
     )
 
-all.receptor.data.minus.nlv <- all.receptor.data.faceted %>%
-    filter(ref.epitope != "NLVPMVATV") %>%
-    filter(samp.epitope != "NLVPMVATV")
-
 all.data.master <- read.csv(paste0(out.path, "/results_master.csv"))
 
-all.data.master.minus.nlv <- all.data.master %>%
-    filter(ref.epitope != "NLVPMVATV") %>%
-    filter(samp.epitope != "NLVPMVATV")
 
 # All plots
 # Density plots
@@ -73,17 +65,6 @@ ggplot(all.data, aes(x = kdist, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_kas_values.png"), width = 6, height = 4)
 
-# All minus NLV
-ggplot(all.data.minus.nlv, aes(x = kdist, color = type)) +
-    geom_density() +
-    labs(title = "Density plot of KAS values, not including NLVPMVATV epitope",
-                x = "KAS",
-                y = "Density",
-                color = "Receptor:receptor pair type") +
-    theme_minimal()
-
-ggsave(paste0(out.path, "/density_plot_kas_values_minus_nlv.png"), width = 6, height = 4)
-
 # KAS scores for all kernel matches, faceted by epitope
 ggplot(all.data.faceted, aes(x = kdist, color = type)) +
     geom_density() +
@@ -95,17 +76,6 @@ ggplot(all.data.faceted, aes(x = kdist, color = type)) +
     facet_wrap(~ epitope)
 
 ggsave(paste0(out.path, "/density_plot_kas_values_per_epitope.png"), width = 6, height = 4)
-
-# Minus NLV
-ggplot(all.data.minus.nlv, aes(x = kdist, color = type)) +
-    geom_density() +
-    labs(title = "Density plot of KAS values by epitope",
-         x = "KAS",
-         y = "Density",
-         color = "Receptor:receptor pair type") +
-    theme_minimal()
-
-ggsave(paste0(out.path, "/density_plot_kas_values_per_epitope_minus_nlv.png"), width = 6, height = 4)
 
 # Spearman correlation for all kernel matches
 ggplot(all.data, aes(x = corr, color = type)) +
@@ -189,16 +159,6 @@ ggplot(all.data, aes(x = patDist, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_subgraph_euclidean_distance.png"), width = 6, height = 4)
 
-# Minus NLV
-ggplot(all.data.minus.nlv, aes(x = patDist, color = type)) +
-    geom_density() +
-    labs(title = "Subgraph Euclidean distance for all kernel matches",
-         x = "Subgraph Euclidean distance",
-         y = "Density",
-         color = "Receptor:receptor pair type") +
-    theme_minimal()
-
-ggsave(paste0(out.path, "/density_plot_subgraph_euclidean_distance_minus_nlv.png"), width = 6, height = 4)
 
 # Subgraph Euclidean distance, faceted by epitope
 ggplot(all.data.faceted, aes(x = patDist, color = type)) +
@@ -223,16 +183,7 @@ ggplot(all.receptor.data, aes(x = top.kdist, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_top_kas_values.png"), width = 6, height = 4)
 
-# Minus NLV
-ggplot(all.receptor.data.minus.nlv, aes(x = top.kdist, color = type)) +
-    geom_density() +
-    labs(title = "Density plot of top KAS values for each receptor:receptor pair, not including NLVPMVATV epitope",
-         x = "KAS",
-         y = "Density",
-         color = "Receptor:receptor pair type") +
-    theme_minimal()
 
-ggsave(paste0(out.path, "/density_plot_top_kas_values_minus_nlv.png"), width = 6, height = 4)
 
 # Top KAS values per receptor:receptor pair, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = top.kdist, color = type)) +
@@ -257,16 +208,7 @@ ggplot(all.receptor.data, aes(x = count, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_kernel_match_counts.png"), width = 6, height = 4)
 
-# Minus NLV
-ggplot(all.receptor.data.minus.nlv, aes(x = count, color = type)) +
-    geom_density() +
-    labs(title = "Kernel match counts per receptor:receptor pair",
-         x = "Count",
-         y = "Density",
-         fill = "Receptor:receptor pair type") +
-    theme_minimal()
 
-ggsave(paste0(out.path, "/density_plot_kernel_match_counts_minus_nlv.png"), width = 6, height = 4)
 
 # Number of kernel matches per receptor:receptor pair, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = count, color = type)) +
@@ -291,16 +233,7 @@ ggplot(all.receptor.data, aes(x = CDR3.similarity, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_cdr3_sequence_similarity.png"), width = 6, height = 4)
 
-# Minus NLV
-ggplot(all.receptor.data.minus.nlv, aes(x = CDR3.similarity, color = type)) +
-    geom_density() +
-    labs(title = "CDR3 sequence similarity for each receptor:receptor pair",
-         x = "CDR3 sequence similarity",
-         y = "Density",
-         color = "Receptor:receptor pair type") +
-    theme_minimal()
 
-ggsave(paste0(out.path, "/density_plot_cdr3_sequence_similarity_minus_nlv.png"), width = 6, height = 4)
 
 # CDR3 sequence similarity, faceted by epitope- shows difference in per-epitope performance is not necessarily just a result of CDR3 similarity, but is definitely related (same trends but not as strong)
 ggplot(all.receptor.data.faceted, aes(x = CDR3.similarity, color = type)) +
@@ -325,16 +258,6 @@ ggplot(all.receptor.data, aes(x = CDR.similarity, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_cdr_sequence_similarity.png"), width = 6, height = 4)
 
-# Minus NLV
-ggplot(all.receptor.data.minus.nlv, aes(x = CDR.similarity, color = type)) +
-    geom_density() +
-    labs(title = "CDR sequence similarity for each receptor:receptor pair",
-         x = "CDR sequence similarity",
-         y = "Density",
-         color = "Receptor:receptor pair type") +
-    theme_minimal()
-
-ggsave(paste0(out.path, "/density_plot_cdr_sequence_similarity_minus_nlv.png"), width = 6, height = 4)
 
 # CDR sequence similarity, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = CDR.similarity, color = type)) +
@@ -359,16 +282,6 @@ ggplot(all.receptor.data, aes(x = full.similarity, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_full_sequence_similarity.png"), width = 6, height = 4)
 
-# Minus NLV
-ggplot(all.receptor.data.minus.nlv, aes(x = full.similarity, color = type)) +
-    geom_density() +
-    labs(title = "Full sequence similarity for each receptor:receptor pair",
-         x = "Full sequence similarity",
-         y = "Density",
-         color = "Receptor:receptor pair type") +
-    theme_minimal()
-
-ggsave(paste0(out.path, "/density_plot_full_sequence_similarity_minus_nlv.png"), width = 6, height = 4)
 
 # Full sequence similarity, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = full.similarity, color = type)) +
@@ -393,16 +306,7 @@ ggplot(all.receptor.data, aes(x = avg.kdist, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_average_kas_values.png"), width = 6, height = 4)
 
-# Minus NLV
-ggplot(all.receptor.data.minus.nlv, aes(x = avg.kdist, color = type)) +
-    geom_density() +
-    labs(title = "Average KAS per receptor:receptor pair",
-         x = "Average KAS",
-         y = "Density",
-         color = "Receptor:receptor pair type") +
-    theme_minimal()
 
-ggsave(paste0(out.path, "/density_plot_average_kas_values_minus_nlv.png"), width = 6, height = 4)
 
 # Average KAS per receptor, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = avg.kdist, color = type)) +
@@ -427,17 +331,6 @@ ggplot(all.receptor.data, aes(x = top.med_scr, color = type)) +
 
 ggsave(paste0(out.path, "/density_plot_median_subgraph_kas_values.png"), width = 6, height = 4)
 
-# Minus NLV
-ggplot(all.receptor.data.minus.nlv, aes(x = top.med_scr, color = type)) +
-    geom_density() +
-    labs(title = "Median subgraph KAS per receptor:receptor pair",
-         x = "Median subgraph KAS",
-         y = "Density",
-         color = "Receptor:receptor pair type") +
-    theme_minimal()
-
-ggsave(paste0(out.path, "/density_plot_median_subgraph_kas_values_minus_nlv.png"), width = 6, height = 4)
-
 # Median subgraph KAS, faceted by epitope
 ggplot(all.receptor.data.faceted, aes(x = top.med_scr, color = type)) +
     geom_density() +
@@ -449,6 +342,7 @@ ggplot(all.receptor.data.faceted, aes(x = top.med_scr, color = type)) +
     facet_wrap(~ epitope)
 
 ggsave(paste0(out.path, "/density_plot_median_subgraph_kas_values_per_epitope.png"), width = 6, height = 4)
+
 
 # Point plots
 # Top KAS value per reference receptor epitope (x axis) colored by sample receptor epitope 
@@ -502,6 +396,19 @@ ggplot(all.data.master, aes(x = ref.epitope, y = avg.corr.per.receptor.pair, col
     scale_size_continuous(range = c(2, 4), guide = "none")
 
 ggsave(paste0(out.path, "/point_plot_average_spearman_correlation.png"), width = 12, height = 8)
+
+# Top Spearman correlation
+ggplot(all.data.master, aes(x = ref.epitope, y = avg.top.corr.per.receptor.pair, color = match.epitope)) +
+    geom_point(aes(size = ifelse(match.epitope %in% c("True positive", "Decoy", "Combined"), 2, 1))) +
+    labs(title = "Top Spearman correlation per reference receptor epitope, colored by sample receptor epitope",
+         x = "Reference epitope",
+         y = "Top Spearman correlation",
+            color = "Paired receptor epitope") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    scale_size_continuous(range = c(2, 4), guide = "none")
+
+ggsave(paste0(out.path, "/point_plot_top_spearman_correlation.png"), width = 12, height = 8)
 
 # Average Euclidean distance per reference receptor epitope (x axis) colored by sample receptor epitope
 ggplot(all.data.master, aes(x = ref.epitope, y = avg.distance.per.receptor.pair, color = match.epitope)) +
@@ -596,6 +503,602 @@ ggplot(all.data.master, aes(x = ref.epitope, y = avg.full.sequence.sim, color = 
     scale_size_continuous(range = c(2, 4), guide = "none")
 
 ggsave(paste0(out.path, "/point_plot_average_full_sequence_similarity.png"), width = 12, height = 8)
+
+
+# Box plots
+# All receptor data (i.e., the data going into the logistic classifier), per feature, per epitope, colored by receptor pair type
+# Make significance tables: Three-way comparisons (i.e., true receptor pairs vs unlikely receptor pairs and true vs decoy receptor pairs)
+# All data
+features.of.interest <- c("top.distance", "top.kdist", "top.corr", "top.shapSim", "top.med_scr", "top.patDist", "avg.distance", "avg.kdist", "avg.corr", "count", "CDR3.similarity", "CDR.similarity", "full.similarity")
+comparisons <- list(
+    c("True receptor pairs", "Unlikely receptor pairs"),
+    c("True receptor pairs", "Decoy receptor pairs")
+)
+significance.results.three.groups <- data.frame()
+
+for (feature in features.of.interest) {
+    significance.results <- all.receptor.data %>% 
+        do({
+            data <- .
+            results <- lapply(comparisons, function(comp) {
+                test <- wilcox.test(as.formula(paste(feature, "~ type")), data = data %>% filter(type %in% comp))
+                data.frame(
+                    Feature = feature,
+                    Comparison = paste(comp, collapse = " vs "),
+                    P.Value = test$p.value
+                )
+            })
+            bind_rows(results)
+        }) %>% 
+        ungroup()
+
+    significance.results.three.groups <- bind_rows(significance.results.three.groups, significance.results)
+}
+
+write.csv(significance.results.three.groups, paste0(out.path, "/significance_results_three_groups.csv"))
+
+# Make significance tables: Two-way comparisons (i.e., true receptor pairs vs unlikely and decoy receptor pairs)
+comparisons <- c("True receptor pairs", "Negative receptor pairs")
+significance.results.two.groups <- data.frame()
+
+for (feature in features.of.interest) {
+    two.way.data <- all.receptor.data %>% 
+        mutate(type = ifelse(type %in% c("Unlikely receptor pairs", "Decoy receptor pairs"), "Negative receptor pairs", type)) 
+    significance.results <- two.way.data %>% 
+        do({
+            data <- .
+            test <- wilcox.test(as.formula(paste(feature, "~ type")), data = data)
+            data.frame(
+                Feature = feature,
+                Comparison = paste(comparisons, collapse = " vs "),
+                P.Value = test$p.value
+            )
+        }) %>% 
+        ungroup()
+
+    significance.results.two.groups <- bind_rows(significance.results.two.groups, significance.results)
+}
+
+write.csv(significance.results.two.groups, paste0(out.path, "/significance_results_two_groups.csv"))
+
+
+# Per epitope
+comparisons <- list(
+    c("True receptor pairs", "Unlikely receptor pairs"),
+    c("True receptor pairs", "Decoy receptor pairs")
+)
+significance.results.three.groups <- data.frame()
+
+for (feature in features.of.interest) {
+    significance.results <- all.receptor.data.faceted %>%
+        group_by(epitope) %>%
+        do({
+            data <- .
+            results <- lapply(comparisons, function(comp) {
+                test <- wilcox.test(as.formula(paste(feature, "~ type")), data = data %>% filter(type %in% comp))
+                data.frame(
+                    Feature = feature,
+                    Epitope = unique(data$epitope),
+                    Comparison = paste(comp, collapse = " vs "),
+                    P.Value = test$p.value
+                )
+            })
+            bind_rows(results)
+        }) %>%
+        ungroup()
+
+    significance.results.three.groups <- bind_rows(significance.results.three.groups, significance.results)
+}
+
+write.csv(significance.results.three.groups, paste0(out.path, "/significance_results_per_epitope_three_groups.csv"))
+
+# Make significance tables: Two-way comparisons (i.e., true receptor pairs vs unlikely and decoy receptor pairs)
+comparisons <- c("True receptor pairs", "Negative receptor pairs")
+significance.results.two.groups <- data.frame()
+
+for (feature in features.of.interest) {
+    two.way.data <- all.receptor.data.faceted %>%
+        mutate(type = ifelse(type %in% c("Unlikely receptor pairs", "Decoy receptor pairs"), "Negative receptor pairs", type)) 
+    significance.results <- two.way.data %>%
+        group_by(epitope) %>%
+        do({
+            data <- .
+            test <- wilcox.test(as.formula(paste(feature, "~ type")), data = data)
+            data.frame(
+                Feature = feature,
+                Epitope = unique(data$epitope),
+                Comparison = paste(comparisons, collapse = " vs "),
+                P.Value = test$p.value
+            )
+        }) %>%
+        ungroup()
+
+    significance.results.two.groups <- bind_rows(significance.results.two.groups, significance.results)
+}
+
+write.csv(significance.results.two.groups, paste0(out.path, "/significance_results_per_epitope_two_groups.csv"))
+
+# Box plots for 2 and 3-way comparisons
+# Top KAS
+library(ggsignif)
+all.receptor.data.two.way <- all.receptor.data %>%
+        mutate(type = ifelse(type %in% c("Unlikely receptor pairs", "Decoy receptor pairs"), "Negative receptor pairs", type))
+
+
+ggplot(all.receptor.data, aes(x = type, y = top.kdist, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Top KAS values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Top KAS") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3) 
+
+ggsave(paste0(out.path, "/box_plot_top_kas_values_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = top.kdist, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Top KAS values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Top KAS") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_top_kas_values_per_epitope_two_group.png"), width = 12, height = 8)
+
+# Average KAS
+ggplot(all.receptor.data, aes(x = type, y = avg.kdist, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average KAS values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average KAS") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_kas_values_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = avg.kdist, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average KAS values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average KAS") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_kas_values_per_epitope_two_group.png"), width = 12, height = 8)
+
+
+# Median subgraph KAS
+ggplot(all.receptor.data, aes(x = type, y = top.med_scr, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Median subgraph KAS values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Median subgraph KAS") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_median_subgraph_kas_values_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = top.med_scr, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Median subgraph KAS values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Median subgraph KAS") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_median_subgraph_kas_values_per_epitope_two_group.png"), width = 12, height = 8)
+
+# Top Spearman correlation
+ggplot(all.receptor.data, aes(x = type, y = top.corr, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Top Spearman correlation values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Top Spearman correlation") +
+    ylim(0.5,1) +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_top_spearman_correlation_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = top.corr, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Top Spearman correlation values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Top Spearman correlation") +
+    ylim(0.5,1) +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_top_spearman_correlation_per_epitope_two_group.png"), width = 12, height = 8)
+
+# Average Spearman correlation
+ggplot(all.receptor.data, aes(x = type, y = avg.corr, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average Spearman correlation values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average Spearman correlation") +
+    ylim(0,1) +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_spearman_correlation_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = avg.corr, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average Spearman correlation values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average Spearman correlation") +
+    ylim(0,1) +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_spearman_correlation_per_epitope_two_group.png"), width = 12, height = 8)
+
+# Average Euclidean distance
+ggplot(all.receptor.data, aes(x = type, y = avg.distance, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average Euclidean distance values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average Euclidean distance") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_euclidean_distance_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = avg.distance, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average Euclidean distance values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average Euclidean distance") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_euclidean_distance_per_epitope_two_group.png"), width = 12, height = 8)
+
+# Average subgraph Euclidean distance
+ggplot(all.receptor.data, aes(x = type, y = top.med_scr, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average subgraph Euclidean distance values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average subgraph Euclidean distance") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_subgraph_euclidean_distance_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = avg.distance, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average subgraph Euclidean distance values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average subgraph Euclidean distance") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_subgraph_euclidean_distance_per_epitope_two_group.png"), width = 12, height = 8)
+
+
+# Average subgraph shape similarity
+ggplot(all.receptor.data, aes(x = type, y = top.shapSim, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average subgraph shape similarity values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average subgraph shape similarity") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_subgraph_shape_similarity_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = top.shapSim, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average subgraph shape similarity values per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average subgraph shape similarity") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_subgraph_shape_similarity_per_epitope_two_group.png"), width = 12, height = 8)
+
+# Average number of kernel matches
+ggplot(all.receptor.data, aes(x = type, y = count, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average number of kernel matches per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average number of kernel matches") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_number_of_kernel_matches_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = count, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average number of kernel matches per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average number of kernel matches") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_number_of_kernel_matches_per_epitope_two_group.png"), width = 12, height = 8)
+
+# Average CDR3 sequence similarity
+ggplot(all.receptor.data, aes(x = type, y = CDR3.similarity, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average CDR3 sequence similarity per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average CDR3 sequence similarity") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_cdr3_sequence_similarity_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = CDR3.similarity, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average CDR3 sequence similarity per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average CDR3 sequence similarity") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_cdr3_sequence_similarity_per_epitope_two_group.png"), width = 12, height = 8)
+
+# Average CDR sequence similarity
+ggplot(all.receptor.data, aes(x = type, y = CDR.similarity, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average CDR sequence similarity per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average CDR sequence similarity") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_cdr_sequence_similarity_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = CDR.similarity, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average CDR sequence similarity per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average CDR sequence similarity") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_cdr_sequence_similarity_per_epitope_two_group.png"), width = 12, height = 8)
+
+# Average full sequence similarity
+ggplot(all.receptor.data, aes(x = type, y = full.similarity, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average full sequence similarity per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average full sequence similarity") +
+    geom_signif(comparisons = list(
+        c("True receptor pairs", "Unlikely receptor pairs"),
+        c("True receptor pairs", "Decoy receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_full_sequence_similarity_per_epitope_three_group.png"), width = 12, height = 8)
+
+ggplot(all.receptor.data.two.way, 
+    aes(x = type, y = full.similarity, fill = type)) +
+    geom_boxplot() +
+    facet_wrap(~ref.epitope, nrow = 1) +
+    theme_minimal() +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Average full sequence similarity per receptor:receptor pair, colored by receptor pair type",
+         x = "Receptor:receptor pair type",
+         y = "Average full sequence similarity") +
+    geom_signif(comparisons = list(c("True receptor pairs", "Negative receptor pairs")),
+        map_signif_level = TRUE, 
+        textsize = 3)
+
+ggsave(paste0(out.path, "/box_plot_average_full_sequence_similarity_per_epitope_two_group.png"), width = 12, height = 8)
+
+# All features, all data (2 and 3-way comparisons), not faceted by epitope
+ggplot((all.receptor.data %>% 
+        select(type, features.of.interest) %>%
+        pivot_longer(cols = features.of.interest, names_to = "feature", values_to = "value")),
+    aes(x = type, y = value, fill = feature)) +
+    geom_boxplot() +
+    theme_minimal() +
+    facet_wrap(~feature, scales = "free", nrow = 2) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = 0.9) +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none") +
+    labs(title = "All features",
+         x = "Receptor:receptor pair type",
+         y = "Value") 
+
+ggsave(paste0(out.path, "/box_plot_all_features_all_data.png"), width = 12, height = 8)
+
+ggplot((all.receptor.data.two.way %>% 
+        select(type, features.of.interest) %>%
+        pivot_longer(cols = features.of.interest, names_to = "feature", values_to = "value")),
+    aes(x = type, y = value, fill = feature)) +
+    geom_boxplot() +
+    theme_minimal() +
+    facet_wrap(~feature, scales = "free", nrow = 2) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = 0.9) +
+    theme(strip.background = element_rect(fill = "lightgrey"), 
+        strip.text = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none") +
+    labs(title = "All features",
+         x = "Receptor:receptor pair type",
+         y = "Value")
+
+ggsave(paste0(out.path, "/box_plot_all_features_all_data_two_group.png"), width = 12, height = 8)
+
 
 
 # Dot plots
@@ -1263,7 +1766,7 @@ sankeyplot <- sankeyNetwork(Links = links, Nodes = nodes, Source = "source",
 saveWidget(sankeyplot, file = paste0(out.path, "/sankey_plot_receptor_pairs.html"), selfcontained = TRUE)
 
 
-# PCA of all features (top KAS, average KAS, Spearman correlation, Euclidean distance, subgraph shape similarity, average number of kernels per pairing)
+# PCA of all features (top KAS, average KAS, Spearman correlation, Euclidean distance, subgraph shape similarity, average number of kernels per pairing) from master data list
 # Select data
 pca.data <- all.data.master %>%
     filter(samp.epitope != "Combined") %>%
@@ -1300,11 +1803,10 @@ fviz_pca_ind(pca.result, col.ind = pca.data$type, geom = "point", addEllipses=TR
 
 ggsave(paste0(out.path, "/pca_plot_individual_factor_map.png"), width = 6, height = 4)
 
-# PCA of all features (top KAS, average KAS, Spearman correlation, Euclidean distance, subgraph shape similarity, average number of kernels per pairing) without NLV data
+# PCA of all features (top KAS, average KAS, Spearman correlation, Euclidean distance, subgraph shape similarity, average number of kernels per pairing) on all receptors
 # Select data
-pca.data <- all.data.master.minus.nlv %>%
-    filter(samp.epitope != "Combined") %>%
-    select(ref.epitope, samp.epitope, type, avg.top.kdist.per.receptor.pair, avg.kdist.per.receptor.pair, avg.corr.per.receptor.pair, avg.distance.per.receptor.pair, avg.subgraph.shape.sim, avg.kernels.per.receptor.pair, avg.CDR3.sequence.sim, avg.full.sequence.sim)
+pca.data <- all.receptor.data %>%
+    select(features.of.interest, type, ref.epitope, samp.epitope)
 
 # Perform PCA
 pca.result <- prcomp(pca.data %>% select(-ref.epitope, -samp.epitope, -type), scale. = TRUE)
@@ -1317,7 +1819,7 @@ autoplot(pca.result, data = pca.data, colour = 'type') +
             color = "Receptor:receptor pair type") +
     theme_minimal()
 
-ggsave(paste0(out.path, "/pca_plot_minus_NLV.png"), width = 6, height = 4)
+ggsave(paste0(out.path, "/pca_plot_all_receptors.png"), width = 6, height = 4)
 
 autoplot(pca.result, data = pca.data, colour = 'type', loadings = TRUE, loadings.label = TRUE, loadings.label.size = 3) +
     labs(title = "PCA of all features, with eigenvectors",
@@ -1326,7 +1828,7 @@ autoplot(pca.result, data = pca.data, colour = 'type', loadings = TRUE, loadings
             color = "Receptor:receptor pair type") +
     theme_minimal()
 
-ggsave(paste0(out.path, "/pca_plot_with_eigenvectors_minus_NLV.png"), width = 6, height = 4)
+ggsave(paste0(out.path, "/pca_plot_with_eigenvectors_all_receptors.png"), width = 6, height = 4)
 
 fviz_pca_ind(pca.result, col.ind = pca.data$type, geom = "point", addEllipses=TRUE, ellipse.level=0.95) +
     labs(title = "PCA of all features, individual factor map",
@@ -1335,13 +1837,13 @@ fviz_pca_ind(pca.result, col.ind = pca.data$type, geom = "point", addEllipses=TR
             color = "Receptor:receptor pair type") +
     theme_minimal()
 
-ggsave(paste0(out.path, "/pca_plot_individual_factor_map_minus_NLV.png"), width = 6, height = 4)
+ggsave(paste0(out.path, "/pca_plot_individual_factor_map_all_receptors.png"), width = 6, height = 4)
 
 
-# PCA on all data and features without NLV data
+# PCA on all data and features (all kernels)
 # Select data
-pca.data <- all.receptor.data.minus.nlv %>% 
-    select(ref.epitope, samp.epitope, type, top.kdist, avg.kdist, avg.distance, avg.corr, top.shapSim, count, CDR3.similarity, full.similarity) 
+pca.data <- all.data %>% 
+    select(c(3:5, 8:9, 13:15))
 
 # Perform PCA
 pca.result <- prcomp(pca.data %>% select(-ref.epitope, -samp.epitope, -type), scale. = TRUE)
@@ -1354,7 +1856,7 @@ autoplot(pca.result, data = pca.data, colour = 'type') +
             color = "Receptor:receptor pair type") +
     theme_minimal()
 
-ggsave(paste0(out.path, "/pca_plot_all_data.png"), width = 6, height = 4)
+ggsave(paste0(out.path, "/pca_plot_all_kernels.png"), width = 6, height = 4)
 
 autoplot(pca.result, data = pca.data, colour = 'type', loadings = TRUE, loadings.label = TRUE, loadings.label.size = 3) +
     labs(title = "PCA of all features, with eigenvectors",
@@ -1363,7 +1865,7 @@ autoplot(pca.result, data = pca.data, colour = 'type', loadings = TRUE, loadings
             color = "Receptor:receptor pair type") +
     theme_minimal()
 
-ggsave(paste0(out.path, "/pca_plot_all_data_with_eigenvectors.png"), width = 6, height = 4)
+ggsave(paste0(out.path, "/pca_plot_with_eigenvectors_all_kernels.png"), width = 6, height = 4)
 
 fviz_pca_ind(pca.result, col.ind = pca.data$type, geom = "point", addEllipses=TRUE, ellipse.level=0.95) +
     labs(title = "PCA of all features, individual factor map",
@@ -1372,4 +1874,4 @@ fviz_pca_ind(pca.result, col.ind = pca.data$type, geom = "point", addEllipses=TR
             color = "Receptor:receptor pair type") +
     theme_minimal()
 
-ggsave(paste0(out.path, "/pca_plot_all_data_individual_factor_map.png"), width = 6, height = 4)
+ggsave(paste0(out.path, "/pca_plot_individual_factor_map_all_kernels.png"), width = 6, height = 4)

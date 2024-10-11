@@ -1,0 +1,12 @@
+".metric","all.features","limited.features","tuned.features"
+"accuracy",0.656,0.628,0.657
+"bal_accuracy",0.587,0.578,0.587
+"f_meas",0.32,0.312,0.32
+"kap",0.124,0.106,0.124
+"mn_log_loss",0.65,0.655,0.65
+"pr_auc",0.343,0.332,0.344
+"precision",0.24,0.226,0.24
+"recall",0.483,0.505,0.482
+"roc_auc",0.626,0.619,0.625
+"sens",0.483,0.505,0.482
+"spec",0.691,0.652,0.692

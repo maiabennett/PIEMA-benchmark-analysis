@@ -1,0 +1,890 @@
+---
+title: "PIEMA Logistic Classifier with Combined Features"
+author: "Maia Bennett-Boehm"
+date: "2024-10-11"
+output: html_document
+---
+
+# Introduction
+
+This document describes the process of training the PIEMA logistic regression classifier using combined features (sequence + structure). The script generates a number of plots (feature box plots, ROC and PR curves) and outputs (metrics, coefficients) for preliminary analysis based on feature selection criteria. These plots are generated automatically but are further refined and exhibited in `logistic-classifier-plots.R` and `logistic-classifier-analysis.R`, which facilitate more in-depth analysis of optimal model data curation and feature selection approaches.
+
+```{r setup, include=FALSE}
+
+# Load the necessary libraries
+library(GGally)
+library(skimr)
+library(DataExplorer)
+library(caret) # for nicer confusion matrix
+library(discrim) # for discriminant analysis
+library(tidyverse)
+library(tidymodels)
+library(themis)
+library(broom)
+library(viridis)
+library(ggrepel)
+library(knitr)
+library(parsnip)
+library(glmnet)
+library(DT)
+
+knitr::chunk_opts$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+```
+
+# Model implementation
+
+This script uses tidymodels to train a logistic regression classifier on the PIEMA data. For this purpose, two models will be trained: 
+
+1. A model that uses only "True binding pairs" (positive data) and "Decoy binding pairs" (negative data)
+
+2. A model that uses all data, including "True binding pairs" (positive data) and "Decoy binding pairs" and "Unlikely binding pairs" (negative data)
+
+
+```{r paths, include=FALSE}
+# Paths
+# out.path <- "./analysis/classifier/without-cross-reactives/run1/with-NLV/"
+# input.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV/"
+
+# out.path <- "./analysis/classifier/without-cross-reactives/run1/without-NLV/"
+# input.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV/"
+
+out.path <- "./analysis/classifier/without-cross-reactives/run2/with-NLV/"
+input.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV/"
+
+# out.path <- "./analysis/classifier/without-cross-reactives/run2/without-NLV/"
+# input.path <- "./analysis/without-cross-reactives/apbs/run2/without-NLV/"
+
+dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
+
+```
+
+
+```{r prepare-data, include=FALSE}
+
+# Load the data
+piema.data <- read.csv(paste0(input.path, "final_receptor_data.csv")) %>%
+    dplyr::rename(top.kas = top.kdist, top.spearman = top.corr, top.euc.dist = top.distance, 
+        top.sg.euc.dist = top.patDist, top.cosine.sim = top.shapSim, top.sg.median.kas = top.med_scr, 
+        binding.pair.type = type, avg.euc.dist = avg.distance, avg.kas = avg.kdist, avg.spearman = avg.corr,
+        kernel.count = count, pair.id = id, top.sg.id = top.sg_group)
+
+# Prepare the data, adding a column to denote whether the receptor pairs share binding specificity (Yes) or not (No)
+# First,  we only want to use the "True binding pairs" and "Decoy binding pairs"
+model1.data <- piema.data %>% 
+    filter(binding.pair.type == "True receptor pairs" | binding.pair.type == "Decoy receptor pairs") %>%
+    mutate(shared.specificity = ifelse(binding.pair.type == "True receptor pairs", "Yes", "No")) %>%
+    mutate(shared.specificity = as.factor(shared.specificity))
+
+# Next, we want to use all data
+model2.data <- piema.data %>%
+    mutate(shared.specificity = ifelse(binding.pair.type == "True receptor pairs", "Yes", "No"))%>%
+    mutate(shared.specificity = as.factor(shared.specificity))
+
+# Set seed for reproducibility
+set.seed(77482951)
+
+# Split the data into training and testing sets
+model1.split <- initial_split(model1.data, prop = 0.75, strata = shared.specificity)
+model1.train <- training(model1.split)
+model1.test <- testing(model1.split)
+
+model2.split <- initial_split(model2.data, prop = 0.75, strata = shared.specificity)
+model2.train <- training(model2.split)
+model2.test <- testing(model2.split)
+
+# Define the variables of interest and recipe for the logistic regression model
+target.var <- "shared.specificity"
+positive.class <- "Yes"
+negative.class <- "No"
+
+```
+
+## Feature Selection
+
+Three feature sets will be used for the logistic regression models: all combined features, including average euclidean distance, top subgraph median kas, average spearman correlation, top cosine similarity, kernel count, CDR3 similarity, and full similarity; and limited features, including average euclidean distance, top subgraph median kas, average spearman correlation, and CDR3 similarity (not including full sequence similarity).
+
+
+```{r recipes, include=FALSE}
+
+# All feature set
+model.form.all.features <- shared.specificity ~ avg.euc.dist + avg.kas + top.sg.median.kas + top.sg.euc.dist + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
+
+# Limited feature set, including average euclidean distance
+model.form.limited.features <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity
+
+
+# Define the recipes for the logistic regression models: downsampling, dummy encoding, and normalization
+model1.recipe.all.features <- recipe(model.form.all.features, data = model1.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+model2.recipe.all.features <- recipe(model.form.all.features, data = model2.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+
+
+model1.recipe.limited.features <- recipe(model.form.limited.features, data = model1.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+model2.recipe.limited.features <- recipe(model.form.limited.features, data = model2.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+
+```
+
+## Model Training
+
+The logistic regression models will be trained using the tidymodels framework. The models will be trained using 10-fold cross-validation and the following metrics: accuracy, kappa, ROC AUC, PR AUC, mean log loss, sensitivity, specificity, F-measure, precision, recall, and balanced accuracy. Additionally, one model per dataset will be trained using the glmnet engine, which allows for tuning of the penalty parameter. This model will be used to assess the impact of feature selection on model performance between the full feature set and the limited feature set.
+
+```{r model-definition, include=FALSE}
+
+classification.metrics <- metric_set(
+    yardstick::accuracy, 
+    yardstick::kap, 
+    yardstick::roc_auc, 
+    yardstick::pr_auc,
+    yardstick::mn_log_loss, 
+    yardstick::sens, 
+    yardstick::spec, 
+    yardstick::f_meas,
+    yardstick::precision,
+    yardstick::recall,
+    yardstick::bal_accuracy,
+    ) 
+
+# Define the logistic regression model and workflow for both models
+logreg.model <- 
+    logistic_reg() %>%
+    set_engine("glm") %>%
+    set_mode("classification") 
+
+logreg.model.tune <- 
+    logistic_reg(penalty = tune(), mixture = 1) %>%
+    set_engine("glmnet") %>%
+    set_mode("classification")
+
+# Define workflows
+model1.workflow.all.features <- workflow() %>%
+    add_recipe(model1.recipe.all.features) %>%
+    add_model(logreg.model)
+model2.workflow.all.features <- workflow() %>%
+    add_recipe(model2.recipe.all.features) %>%
+    add_model(logreg.model)
+
+model1.workflow.limited.features <- workflow() %>%
+    add_recipe(model1.recipe.limited.features) %>%
+    add_model(logreg.model)
+model2.workflow.limited.features <- workflow() %>%
+    add_recipe(model2.recipe.limited.features) %>%
+    add_model(logreg.model)
+
+model1.workflow.all.features.tune <- workflow() %>%
+    add_recipe(model1.recipe.all.features) %>%
+    add_model(logreg.model.tune)
+model2.workflow.all.features.tune <- workflow() %>%
+    add_recipe(model2.recipe.all.features) %>%
+    add_model(logreg.model.tune)
+
+
+# Specify resamples and CV folds
+set.seed(77482951)
+control <- control_resamples(save_pred = TRUE,
+                            event_level = "second")
+
+model1.cv.folds <- vfold_cv(model1.train, v = 10)
+model2.cv.folds <- vfold_cv(model2.train, v = 10)
+
+tune.grid <- grid_regular(penalty(), levels = 100)
+
+
+```
+
+
+```{r model-training, include=FALSE}
+
+# Fit models on training data
+model1.fit.all.features <- model1.workflow.all.features %>% 
+    fit_resamples(
+        resamples = model1.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+model2.fit.all.features <- model2.workflow.all.features %>%
+    fit_resamples(
+        resamples = model2.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+model1.fit.limited.features <- model1.workflow.limited.features %>%
+    fit_resamples(
+        resamples = model1.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+model2.fit.limited.features <- model2.workflow.limited.features %>%
+    fit_resamples(
+        resamples = model2.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+model1.fit.all.features.tune <- model1.workflow.all.features.tune %>%
+    tune_grid(resamples = model1.cv.folds,
+        grid = tune.grid,
+        control = control,
+        metrics = classification.metrics)
+
+model2.fit.all.features.tune <- model2.workflow.all.features.tune %>%
+    tune_grid(resamples = model2.cv.folds,
+        grid = tune.grid,
+        control = control,
+        metrics = classification.metrics)
+
+
+```
+
+Training these models results in the performance metrics for each model shown below. As is evident from these metrics, the model trained on the full feature set outperforms the model trained on the limited feature set. This is particularly evident in the ROC AUC and PR AUC metrics, which are higher for the model trained on the full feature set, although sensitivity is higher in the model trained on the limited feature set. The tuned model exhibits highly similar performance to the full feature set model, suggesting that the full feature set is optimal for this dataset.
+
+```{r initial-model-evaluation, include=FALSE}
+
+# Fetch training predictions
+model1.train.pred.all.features <- model1.fit.all.features %>%
+    collect_predictions()
+model2.train.pred.all.features <- model2.fit.all.features %>%
+    collect_predictions()
+
+model1.train.pred.limited.features <- model1.fit.limited.features %>%
+    collect_predictions()
+model2.train.pred.limited.features <- model2.fit.limited.features %>%
+    collect_predictions()
+
+# Calculate and store metrics
+model1.train.metrics.all.features <- model1.fit.all.features %>%
+    collect_metrics()
+model2.train.metrics.all.features <- model2.fit.all.features %>%
+    collect_metrics()
+
+model1.train.metrics.limited.features <- model1.fit.limited.features %>%
+    collect_metrics()
+model2.train.metrics.limited.features <- model2.fit.limited.features %>%
+    collect_metrics()
+
+model1.train.metrics.all.features.tune <- model1.fit.all.features.tune %>%
+    collect_metrics()
+model2.train.metrics.all.features.tune <- model2.fit.all.features.tune %>%
+    collect_metrics()
+
+# For the tune set, we want to extract the best model
+# Using ROC AUC to select the model, we choose the model with the largest penalty to assess against the manually curated feature sets
+metric.metric.for.selection <- "roc_auc"
+
+model1.best.tune <- model1.fit.all.features.tune %>%
+    collect_metrics() %>%
+    filter(.metric == metric.metric.for.selection) %>%
+    filter(mean == max(mean)) %>%
+    arrange(penalty) %>%
+    slice(nrow(.)) 
+model1.best.tune.penalty <- model1.best.tune %>%
+    pull(penalty)
+model2.best.tune<- model2.fit.all.features.tune %>%
+    collect_metrics() %>%
+    filter(.metric == metric.metric.for.selection) %>%
+    filter(mean == max(mean)) %>%
+    arrange(penalty) %>%
+    slice(nrow(.)) 
+model2.best.tune.penalty <- model2.best.tune %>%
+    pull(penalty)
+
+# Then, fetch predictions and metrics from this best tuned model
+model1.best.tune.pred.all.features <- model1.fit.all.features.tune %>%
+    collect_predictions(parameters = model1.best.tune)
+
+model2.best.tune.pred.all.features <- model2.fit.all.features.tune %>%
+    collect_predictions(parameters = model2.best.tune)
+
+model1.best.tune.metrics <- model1.train.metrics.all.features.tune %>%
+    filter(penalty == model1.best.tune.penalty)
+model2.best.tune.metrics <- model2.train.metrics.all.features.tune %>%
+    filter(penalty == model2.best.tune.penalty)
+
+model1.workflow.best.tune <- model1.workflow.all.features.tune %>%
+    finalize_workflow(model1.best.tune)
+model2.workflow.best.tune <- model2.workflow.all.features.tune %>%
+    finalize_workflow(model2.best.tune)
+
+# Combine all training metrics
+model1.train.metrics <- model1.train.metrics.all.features %>%
+    select(.metric, mean) %>%
+    mutate(mean = round(mean, 3)) %>%
+    dplyr::rename(all.features = mean) %>%
+    bind_cols(model1.train.metrics.limited.features %>% 
+        select(mean) %>% 
+        mutate(mean = round(mean, 3)) %>%
+        dplyr::rename(limited.features = mean)) %>%
+    bind_cols(model1.best.tune.metrics %>%
+        select(mean) %>%
+        mutate(mean = round(mean, 3)) %>%
+        dplyr::rename(tuned.features = mean))
+
+model2.train.metrics <- model2.train.metrics.all.features %>%
+    select(.metric, mean) %>%
+    mutate(mean = round(mean, 3)) %>%
+    dplyr::rename(all.features = mean) %>%
+    bind_cols(model2.train.metrics.limited.features %>% 
+        select(mean) %>% 
+        mutate(mean = round(mean, 3)) %>%
+        dplyr::rename(limited.features = mean)) %>%
+    bind_cols(model2.best.tune.metrics %>%
+        select(mean) %>%
+        mutate(mean = round(mean, 3)) %>%
+        dplyr::rename(tuned.features = mean))
+
+datatable(model1.train.metrics %>% dplyr::rename(metrics = .metric), 
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = paste0("Training metrics: True positive pairs vs. decoy pairs, tuned penalty of ", model1.best.tune.penalty))
+
+datatable(model2.train.metrics, extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = paste0("Training metrics: True positive pairs vs. unlikely + decoy pairs, tuned penalty of ", model2.best.tune.penalty))
+
+```
+
+## Model Evaluation
+
+After initial evaluation on training cross-validation splits, the models are fitted to the full training set and evaluated for their performance on the test data. The metrics for the test data are shown below. The model trained on the full feature set outperforms the model trained on the limited feature set, with higher ROC AUC and PR AUC metrics. The tuned model again exhibits similar performance to the full feature set model, suggesting that the full feature set is optimal for this dataset. Confusion matrices along with ROC and PR AUC curves are generated here. These results are further analyzed in `logistic-classifier-plots.R` and `logistic-classifier-analysis.R`.
+
+
+```{r model-test, include=FALSE}
+
+# Fit models on all train data and evaluate on test data
+model1.test.fit.all.features <- model1.workflow.all.features %>%
+    last_fit(model1.split, 
+        metrics = classification.metrics)
+model2.test.fit.all.features <- model2.workflow.all.features %>%
+    last_fit(model2.split, 
+        metrics = classification.metrics)
+
+model1.test.fit.limited.features <- model1.workflow.limited.features %>%
+    last_fit(model1.split, 
+        metrics = classification.metrics)
+model2.test.fit.limited.features <- model2.workflow.limited.features %>%
+    last_fit(model2.split, 
+        metrics = classification.metrics)
+
+model1.test.fit.best.tune <- model1.workflow.best.tune %>%
+    last_fit(model1.split, 
+        metrics = classification.metrics)
+model2.test.fit.best.tune <- model2.workflow.best.tune %>%
+    last_fit(model2.split, 
+        metrics = classification.metrics)
+
+
+# Collect test predictions
+model1.test.pred.all.features <- model1.test.fit.all.features %>%
+    collect_predictions() %>%
+    left_join((model1.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model2.test.pred.all.features <- model2.test.fit.all.features %>%
+    collect_predictions() %>%
+    left_join((model2.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model1.test.pred.limited.features <- model1.test.fit.limited.features %>%
+    collect_predictions() %>%
+    left_join((model1.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model2.test.pred.limited.features <- model2.test.fit.limited.features %>%
+    collect_predictions() %>%
+    left_join((model2.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model1.test.pred.best.tune <- model1.test.fit.best.tune %>%
+    collect_predictions() %>%
+    left_join((model1.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model2.test.pred.best.tune <- model2.test.fit.best.tune %>%
+    collect_predictions() %>%
+    left_join((model2.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+# Collect test metrics
+model1.test.metrics.all.features <- model1.test.pred.all.features %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+model2.test.metrics.all.features <- model2.test.pred.all.features %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+
+model1.test.metrics.limited.features <- model1.test.pred.limited.features %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+model2.test.metrics.limited.features <- model2.test.pred.limited.features %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+
+model1.test.metrics.best.tune <- model1.test.pred.best.tune %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+model2.test.metrics.best.tune <- model2.test.pred.best.tune %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+
+# Combine and print test metrics
+model1.test.metrics <- model1.test.metrics.all.features %>%
+    select(.metric, .estimate) %>%
+    mutate(.estimate = round(.estimate, 3)) %>%
+    dplyr::rename(all.features = .estimate) %>%
+    bind_cols(model1.test.metrics.limited.features %>% 
+        select(.estimate) %>% 
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(limited.features = .estimate)) %>%
+    bind_cols(model1.test.metrics.best.tune %>% 
+        select(.estimate) %>% 
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(tuned.features = .estimate))
+
+model2.test.metrics <- model2.test.metrics.all.features %>%
+    select(.metric, .estimate) %>%
+    mutate(.estimate = round(.estimate, 3)) %>%
+    dplyr::rename(all.features = .estimate) %>%
+    bind_cols(model2.test.metrics.limited.features %>% 
+        select(.estimate) %>% 
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(limited.features = .estimate)) %>%
+    bind_cols(model2.test.metrics.best.tune %>% 
+        select(.estimate) %>% 
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(tuned.features = .estimate))
+
+datatable(model1.test.metrics %>% dplyr::rename(metrics = .metric), 
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Test metrics: True positive pairs vs. decoy pairs")
+
+datatable(model2.test.metrics,
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Test metrics: True positive pairs vs. unlikely + decoy pairs")
+
+```
+
+```{r performance-plots, include=FALSE, results = 'asis'}
+
+cat("### Confusion matrices\n\n")
+cat("#### Model 1: True positive pairs vs. decoy pairs, all features\n")
+(model1.cm.all.features <- confusionMatrix(data = model1.test.pred.all.features$.pred_class, 
+    reference = model1.test[[target.var]], 
+    positive = positive.class))
+
+cat("#### Model 1: True positive pairs vs. decoy pairs, limited features\n")
+model1.cm.limited.features <- confusionMatrix(data = model1.test.pred.limited.features$.pred_class, 
+    reference = model1.test[[target.var]], 
+    positive = positive.class)  
+
+cat("#### Model 1: True positive pairs vs. decoy pairs, best tuned model\n")
+model1.cm.best.tune <- confusionMatrix(data = model1.test.pred.best.tune$.pred_class, 
+    reference = model1.test[[target.var]], 
+    positive = positive.class)
+
+cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs, all features\n")
+model2.cm.all.features <- confusionMatrix(data = model2.test.pred.all.features$.pred_class,
+    reference = model2.test[[target.var]], 
+    positive = positive.class)
+
+cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs, limited features\n")
+model2.cm.limited.features <- confusionMatrix(data = model2.test.pred.limited.features$.pred_class,
+    reference = model2.test[[target.var]], 
+    positive = positive.class)  
+
+cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs, best tuned model\n")
+model2.cm.best.tune <- confusionMatrix(data = model2.test.pred.best.tune$.pred_class,
+    reference = model2.test[[target.var]], 
+    positive = positive.class)
+
+cat("### ROC and PR curves")
+cat("#### Model 1: True positive pairs vs. decoy pairs\n")
+bind_rows((model1.test.pred.all.features %>%
+    roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>% 
+    mutate(model = paste("All features\nROC AUC = ", 
+        ROC_AUC = round(model1.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(all.features), 3)))),
+    (model1.test.pred.limited.features %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Limited features\nROC AUC = ", 
+            ROC_AUC = round(model1.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(limited.features), 3)))),
+    (model1.test.pred.best.tune %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Best tuned model\nROC AUC = ", 
+            ROC_AUC = round(model1.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(tuned.features), 3))))) %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, color = model, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    geom_abline(lty = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "ROC curve", x = "1 - Specificity", y = "Sensitivity")
+
+ggsave(paste0(out.path, "combined_features_model1_roc_curve.png"), width = 10, height = 8)
+
+bind_rows((model1.test.pred.all.features %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(model = paste("All features\nPR AUC = ", 
+        PR_AUC = round(model1.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(all.features), 3)))),
+    (model1.test.pred.limited.features %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Limited features\nPR AUC = ", 
+            PR_AUC = round(model1.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(limited.features), 3)))),
+    (model1.test.pred.best.tune %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Best tuned model\nPR AUC = ", 
+            PR_AUC = round(model1.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(tuned.features), 3))))) %>%
+    ggplot(aes(x = recall, y = precision, color = model, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "PR curve", x = "Recall", y = "Precision")
+
+ggsave(paste0(out.path, "combined_features_model1_pr_curve.png"), width = 10, height = 6)
+
+cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs\n")
+
+bind_rows((model2.test.pred.all.features %>%
+    roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>% 
+    mutate(model = paste("All features\nROC AUC = ", 
+        ROC_AUC = round(model2.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(all.features), 3)))),
+    (model2.test.pred.limited.features %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Limited features\nROC AUC = ", 
+            ROC_AUC = round(model2.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(limited.features), 3)))),
+    (model2.test.pred.best.tune %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Best tuned model\nROC AUC = ", 
+            ROC_AUC = round(model2.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(tuned.features), 3))))) %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, color = model, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    geom_abline(lty = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "ROC curve", x = "1 - Specificity", y = "Sensitivity")
+
+ggsave(paste0(out.path, "combined_features_model2_roc_curve.png"), width = 10, height = 8)
+
+bind_rows((model2.test.pred.all.features %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(model = paste("All features\nPR AUC = ", 
+        PR_AUC = round(model2.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(all.features), 3)))),
+    (model2.test.pred.limited.features %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Limited features\nPR AUC = ", 
+            PR_AUC = round(model2.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(limited.features), 3)))),
+    (model2.test.pred.best.tune %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Best tuned model\nPR AUC = ", 
+            PR_AUC = round(model2.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(tuned.features), 3))))) %>%
+    ggplot(aes(x = recall, y = precision, color = model, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "PR curve", x = "Recall", y = "Precision")
+
+ggsave(paste0(out.path, "combined_features_model2_pr_curve.png"), width = 10, height = 8)
+
+
+```
+
+### Per-epitope model evaluation
+
+
+```{r per-epitope-evaluation, include=FALSE}
+
+# Metrics
+model1.epitope.metrics <- (model1.test.pred.all.features %>%
+    group_by(ref.epitope) %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = "second") %>%
+    select(ref.epitope, .metric, .estimate) %>%
+    mutate(.estimate = round(.estimate, 3)) %>% 
+    dplyr::rename(all.features = .estimate)) %>%
+    bind_cols((model1.test.pred.limited.features %>%
+        group_by(ref.epitope) %>%
+        classification.metrics(truth = shared.specificity,
+            estimate = .pred_class,
+            .pred_Yes,
+            event_level = "second") %>%
+        select(.estimate) %>%
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(limited.features = .estimate))) %>%
+    bind_cols((model1.test.pred.best.tune %>%
+        group_by(ref.epitope) %>%
+        classification.metrics(truth = shared.specificity,
+            estimate = .pred_class,
+            .pred_Yes,
+            event_level = "second") %>%
+        select(.estimate) %>%
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(tuned.features = .estimate)))
+
+
+model2.epitope.metrics <- (model2.test.pred.all.features %>%
+    mutate(epitope = ref.epitope) %>%
+    bind_rows(model2.test.pred.all.features %>%
+        filter(ref.epitope != samp.epitope) %>%
+        mutate(epitope = samp.epitope)) %>%
+    group_by(epitope) %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = "second") %>%
+    select(epitope, .metric, .estimate) %>%
+    mutate(.estimate = round(.estimate, 3)) %>% 
+    dplyr::rename(all.features = .estimate)) %>%
+    bind_cols((model2.test.pred.limited.features %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.limited.features %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        classification.metrics(truth = shared.specificity,
+            estimate = .pred_class,
+            .pred_Yes,
+            event_level = "second") %>%
+        select(.estimate) %>%
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(limited.features = .estimate))) %>%
+    bind_cols((model2.test.pred.best.tune %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.best.tune %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        classification.metrics(truth = shared.specificity,
+            estimate = .pred_class,
+            .pred_Yes,
+            event_level = "second") %>%
+        select(.estimate) %>%
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(tuned.features = .estimate)))
+
+datatable(model1.epitope.metrics %>% dplyr::rename(metrics = .metric),
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Model 1: Per-epitope test metrics")
+
+datatable(model2.epitope.metrics %>% dplyr::rename(metrics = .metric),
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Model 2: Per-epitope test metrics")
+
+
+# ROC + PR AUC
+# Tuned model is not shown for the sake of clarity, as its curves are nearly identical to that of the all features model
+cat("#### Model 1: Per-epitope ROC and PR curves\n")
+
+bind_rows(
+    (model1.test.pred.all.features %>%
+        group_by(ref.epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "All features")),
+    (model1.test.pred.limited.features %>%
+        group_by(ref.epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Limited features"))
+    ) %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, color = ref.epitope, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    geom_abline(lty = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "ROC curve", x = "1 - Specificity", y = "Sensitivity")
+
+ggsave(paste0(out.path, "combined_features_model1_per_epitope_roc_curve.png"), width = 15, height = 12)
+
+bind_rows(
+    (model1.test.pred.all.features %>%
+        group_by(ref.epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "All features")),
+    (model1.test.pred.limited.features %>%
+        group_by(ref.epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Limited features"))
+    ) %>%
+    ggplot(aes(x = recall, y = precision, color = ref.epitope, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "PR curve", x = "Recall", y = "Precision")
+
+ggsave(paste0(out.path, "combined_features_model1_per_epitope_pr_curve.png"), width = 15, height = 12)
+
+cat("#### Model 2: Per-epitope ROC and PR curves\n")
+bind_rows(
+    (model1.test.pred.all.features %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.all.features %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "All features")),
+    (model1.test.pred.limited.features %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.limited.features %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Limited features"))
+    ) %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, color = epitope, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    geom_abline(lty = 3) +
+    coord_equal() +
+    scale_color_viridis_d(option = "mako", begin = 0.2, end = 0.8) +
+    labs(title = "ROC curve", x = "1 - Specificity", y = "Sensitivity")
+
+ggsave(paste0(out.path, "combined_features_model2_per_epitope_roc_curve.png"), width = 15, height = 12)
+
+bind_rows(
+    (model1.test.pred.all.features %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.all.features %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "All features")),
+    (model1.test.pred.limited.features %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.limited.features %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Limited features"))
+    ) %>%
+    ggplot(aes(x = recall, y = precision, color = epitope, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    coord_equal() + 
+    scale_color_viridis_d(option = "mako", begin = 0.2, end = 0.8) +
+    labs(title = "PR curve", x = "Recall", y = "Precision")
+
+ggsave(paste0(out.path, "combined_features_model2_per_epitope_pr_curve.png"), width = 15, height = 12)
+
+
+
+```
+
+
+### Feature Importance
+
+
+```{r coefficients, include=FALSE}
+
+model1.coefficients <- (model1.test.fit.all.features %>%
+    extract_fit_engine() %>%
+    broom::tidy() %>%
+    select(term, estimate, p.value) %>%
+    dplyr::rename(all.features = estimate, all.features.p.value = p.value)) %>%
+    full_join(model1.workflow.best.tune %>% 
+        fit(model1.train) %>% 
+        pull_workflow_fit() %>%
+        broom::tidy() %>% 
+        select(term, estimate, penalty) %>% 
+        dplyr::rename(tuned.features = estimate, tuned.penalty = penalty),
+        by = "term") %>%
+    full_join(model1.test.fit.limited.features %>%
+        extract_fit_engine() %>%
+        broom::tidy() %>%
+        select(term, estimate, p.value) %>%
+        dplyr::rename(limited.features = estimate, limited.features.p.value = p.value),
+        by = "term")
+
+model2.coefficients <- (model2.test.fit.all.features %>%
+    extract_fit_engine() %>%
+    broom::tidy() %>%
+    select(term, estimate, p.value) %>%
+    dplyr::rename(all.features = estimate, all.features.p.value = p.value)) %>%
+    full_join(model2.workflow.best.tune %>% 
+        fit(model2.train) %>% 
+        pull_workflow_fit() %>%
+        broom::tidy() %>% 
+        select(term, estimate, penalty) %>% 
+        dplyr::rename(tuned.features = estimate, tuned.penalty = penalty),
+        by = "term") %>%
+    full_join(model2.test.fit.limited.features %>%
+        extract_fit_engine() %>%
+        broom::tidy() %>%
+        select(term, estimate, p.value) %>%
+        dplyr::rename(limited.features = estimate, limited.features.p.value = p.value),
+        by = "term")
+
+datatable(model1.coefficients,
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Model 1: Coefficients for all, limited, and tuned feature sets")
+
+datatable(model2.coefficients,
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Model 2: Coefficients for all, limited, and tuned feature sets")
+
+
+```
+
+
+```{r write-results, include=FALSE}
+
+write.csv(model1.train.pred.all.features, paste0(out.path, "combined_features_model1_train_pred_all_features.csv"), row.names = FALSE)
+write.csv(model2.train.pred.all.features, paste0(out.path, "combined_features_model2_train_pred_all_features.csv"), row.names = FALSE)
+write.csv(model1.train.pred.limited.features, paste0(out.path, "combined_features_model1_train_pred_limited_features.csv"), row.names = FALSE)
+write.csv(model2.train.pred.limited.features, paste0(out.path, "combined_features_model2_train_pred_limited_features.csv"), row.names = FALSE)
+write.csv(model1.best.tune.pred.all.features, paste0(out.path, "combined_features_model1_train_pred_best_tune.csv"), row.names = FALSE)
+write.csv(model2.best.tune.pred.all.features, paste0(out.path, "combined_features_model2_train_pred_best_tune.csv"), row.names = FALSE)
+
+write.csv(model1.train.metrics, paste0(out.path, "combined_features_model1_train_metrics.csv"), row.names = FALSE)
+write.csv(model2.train.metrics, paste0(out.path, "combined_features_model2_train_metrics.csv"), row.names = FALSE)
+
+write.csv(model1.test.pred.all.features, paste0(out.path, "combined_features_model1_test_pred_all_features.csv"), row.names = FALSE)
+write.csv(model2.test.pred.all.features, paste0(out.path, "combined_features_model2_test_pred_all_features.csv"), row.names = FALSE)
+write.csv(model1.test.pred.limited.features, paste0(out.path, "combined_features_model1_test_pred_limited_features.csv"), row.names = FALSE)
+write.csv(model2.test.pred.limited.features, paste0(out.path, "combined_features_model2_test_pred_limited_features.csv"), row.names = FALSE)
+write.csv(model1.test.pred.best.tune, paste0(out.path, "combined_features_model1_test_pred_best_tune.csv"), row.names = FALSE)
+write.csv(model2.test.pred.best.tune, paste0(out.path, "combined_features_model2_test_pred_best_tune.csv"), row.names = FALSE)
+
+write.csv(model1.test.metrics, paste0(out.path, "combined_features_model1_test_metrics.csv"), row.names = FALSE)
+write.csv(model2.test.metrics, paste0(out.path, "combined_features_model2_test_metrics.csv"), row.names = FALSE)
+
+write.csv(model1.epitope.metrics, paste0(out.path, "combined_features_model1_epitope_metrics.csv"), row.names = FALSE)
+write.csv(model2.epitope.metrics, paste0(out.path, "combined_features_model2_epitope_metrics.csv"), row.names = FALSE)
+
+write.csv(model1.coefficients, paste0(out.path, "combined_features_model1_coefficients.csv"), row.names = FALSE)
+write.csv(model2.coefficients, paste0(out.path, "combined_features_model2_coefficients.csv"), row.names = FALSE)
+
+
+```

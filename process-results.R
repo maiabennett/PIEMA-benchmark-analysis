@@ -10,24 +10,32 @@
 library(tidyverse)
 
 # Specify paths
-# negative.data.path <- "./results/run1/negative/apbs/"
-# positive.data.path <- "./results/run1/positive/apbs"
-# out.path <- "./analysis/apbs/run1"
-# negative.data.path <- "./results/run1/negative/easymifs/CMET"
+# negative.data.path <- "./results/run1/negative/easymifs/CMET/"
 # positive.data.path <- "./results/run1/positive/easymifs/CMET"
 # out.path <- "./analysis/easymifs/run1/CMET"
-# negative.data.path <- "./results/run1/negative/easymifs/OP"
+
+# negative.data.path <- "./results/run1/negative/easymifs/OP/"
 # positive.data.path <- "./results/run1/positive/easymifs/OP"
 # out.path <- "./analysis/easymifs/run1/OP"
+
+# negative.data.path <- "./results/run1/negative/apbs/"
+# positive.data.path <- "./results/run1/positive/apbs"
+# out.path <- "./analysis/apbs/with-cross-reactives/run1"
+# out.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV"
+# out.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV"
+
 negative.data.path <- "./results/run2/negative/"
 positive.data.path <- "./results/run2/positive"
-out.path <- "./analysis/apbs/run2"
+# out.path <- "./analysis/apbs/with-cross-reactives/run2"
+# out.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV"
+out.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV"
+
 
 # Make analysis directory
 dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
 
-# Import data
 
+# Import data
 negative.data <- data.frame()
 positive.data <- read.csv(paste0(positive.data.path, "/positive_final_results.csv"))
 
@@ -38,6 +46,7 @@ for (file in files) {
     negative.data <- rbind(negative.data, temp.data)
 }
 
+# Clean data
 # If '_rot' still present in ID column, remove all instances
 negative.data <- negative.data %>%
     mutate(id = str_replace_all(id, "_rot", ""))
@@ -61,12 +70,27 @@ positive.data <- positive.data %>%
     mutate(ref.epitope = str_extract(ref.id, "(?<=_).*(?=_[^_]*$)"),
            samp.epitope = str_extract(samp.id, "(?<=_).*(?=_[^_]*$)"))
 
-
 # Remove negative v negative (two decoy) and positive v positive (two non-decoy) comparisons (negative data only)
 negative.data <- negative.data %>%
     filter(!(str_detect(ref.id, "decoy") & str_detect(samp.id, "decoy"))) %>%
     filter(str_detect(ref.id, "decoy") | str_detect(samp.id, "decoy"))
 
+
+# If removing subsets of data, remove here
+remove.substring <- "YVLDHLIVV"
+negative.data <- negative.data %>%
+    filter(!(str_detect(ref.epitope, remove.substring) | str_detect(samp.epitope, remove.substring)))
+positive.data <- positive.data %>%
+    filter(!(str_detect(ref.epitope, remove.substring) | str_detect(samp.epitope, remove.substring)))
+
+remove.substring <- "NLVPMVATV"
+negative.data <- negative.data %>%
+    filter(!(str_detect(ref.epitope, remove.substring) | str_detect(samp.epitope, remove.substring)))
+positive.data <- positive.data %>%
+    filter(!(str_detect(ref.epitope, remove.substring) | str_detect(samp.epitope, remove.substring)))
+
+# Combine data for various results files
+# Count the number of receptors and receptor data sources for each epitope
 # Combine unique values of ref.id and ref.epitope with samp.id and samp.epitope
 unique.receptor.data <- bind_rows(
     negative.data %>% select(id = ref.id, epitope = ref.epitope),
@@ -112,6 +136,7 @@ write.csv(count.receptor.data, file = paste0(out.path, "/final_receptor_counts.c
 write.csv(count.method.data, file = paste0(out.path, "/final_method_counts.csv"), row.names = FALSE)
 
 
+# Separate receptor:receptor pairs into true positive matches (same epitope), decoy receptor pairs (different epitopes), and unlikely receptor pairs (non-matches)
 # Separate positive data into true positive matches (same epitope) and unlikely matches (different epitopes)
 # Define a function to check for complex matches
 isMatch <- function(ref_epitope, samp_epitope) {
@@ -138,11 +163,16 @@ all.data <- bind_rows(
     mismatch.data %>% mutate(type = "Unlikely receptor paired kernels")
 )
 
+# Remove erroneous YVL-GIL decoys
+all.data <- all.data %>%
+    filter(!(ref.epitope == "YVLDHLIVV" & samp.epitope == "GILGFVFTL" & type == "Decoy receptor pairs"))
+
+
 # Write data
 write.csv(all.data, file = paste0(out.path, "/final_all_kernels_data.csv"), row.names = FALSE)
 
 
-# Make information tables
+# Make subgraph, receptor, and master information tables
 # Data table for receptor:receptor subgraphs
 all.subgraph.data <- all.data %>%
     group_by(id, sg_group) %>%
@@ -221,6 +251,7 @@ all.data.master <- all.receptor.data %>%
               avg.top.kdist.per.receptor.pair = mean(top.kdist),
               avg.kdist.per.receptor.pair = mean(avg.kdist),
               avg.corr.per.receptor.pair = mean(avg.corr),
+              avg.top.corr.per.receptor.pair = mean(top.corr),
               avg.subgraph.distance = mean(top.patDist),
               avg.subgraph.shape.sim = mean(top.shapSim),
               avg.median.kdist.per.receptor.pair = mean(top.med_scr),
@@ -243,6 +274,7 @@ all.data.master <- bind_rows(all.data.master,
             avg.top.kdist.per.receptor.pair = mean(avg.top.kdist.per.receptor.pair),
             avg.kdist.per.receptor.pair = mean(avg.kdist.per.receptor.pair),
             avg.corr.per.receptor.pair = mean(avg.corr.per.receptor.pair),
+            avg.top.corr.per.receptor.pair = mean(avg.top.corr.per.receptor.pair),
             avg.subgraph.distance = mean(avg.subgraph.distance),
             avg.subgraph.shape.sim = mean(avg.subgraph.shape.sim),
             avg.median.kdist.per.receptor.pair = mean(avg.median.kdist.per.receptor.pair),
@@ -259,9 +291,6 @@ all.data.master <- bind_rows(all.data.master,
         TRUE ~ samp.epitope
     ))
 
-# Remove erroneous YVL-GIL decoys
-all.data.master <- all.data.master %>%
-    filter(!(ref.epitope == "YVLDHLIVV" & samp.epitope == "GILGFVFTL" & type == "Decoy receptor pairs"))
 
 # Export data
 write.csv(all.data.master, file = paste0(out.path, "/results_master.csv"), row.names = FALSE)

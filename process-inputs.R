@@ -33,7 +33,7 @@ data.frame(Distinct_values = sapply(high.confidence.full.similarity.90, function
 write.csv(high.confidence.full.similarity.90, "./data/high-confidence-full-similarity-90-paired-sequences.csv", row.names = FALSE)
 
 # Generate negative data with specified epitope list (generates evenly distributed data for epitopes)
-# This list contains all epitopes with > 50 receptors in 90% CDR3 sequence similarity high confidence dataset
+# This list contains all epitopes with > 50 receptors in 90% CDR3 sequence similarity high confidence dataset (i.e., "run 1: CDR3 similarity benchmark")
 target.epitopes.info <- fetchEpitopes(high.confidence.similarity.90, column = "Epitope", threshold = 50)
 target.epitopes <- target.epitopes.info %>% pull(Epitope)
 n.negative <- 50
@@ -46,7 +46,7 @@ negative.data <- negative.data %>%
 
 write.csv(negative.data, "./data/piema-benchmark-negative-sequences.csv", row.names = FALSE)
 
-# This list contains all epitopes with > 49 receptors in 90% full sequence similarity high confidence dataset; 49 is used to include YLQ, which is of interest and present in the first dataset
+# This list contains all epitopes with > 49 receptors in 90% full sequence similarity high confidence dataset; 49 is used to include YLQ, which is of interest and present in the first dataset (i.e., "run 2: full sequence similarity benchmark")
 target.epitopes.info.full <- fetchEpitopes(high.confidence.full.similarity.90, column = "Epitope", threshold = 49)
 target.epitopes.full <- target.epitopes.info.full %>% pull(Epitope)
 n.negative <- 50
@@ -58,6 +58,31 @@ negative.data.full <- negative.data.full %>%
     ungroup()
 
 write.csv(negative.data.full, "./data/piema-benchmark-negative-sequences-full.csv", row.names = FALSE)
+
+# This list contains all epitopes with > 25 receptors in 90% CDR3 sequence similarity high confidence dataset (i.e., "run 3: larger pool benchmark")
+# For reasons of simplifying the matter of cross-reactivity in logistic classifier training, the YVLDHLIVV epitope is excluded from this list
+target.epitopes.info.large <- fetchEpitopes(high.confidence.similarity.90, column = "Epitope", threshold = 25)
+target.epitopes.large <- target.epitopes.info.large %>% 
+    filter(Epitope != "YVLDHLIVV") %>%
+    pull(Epitope)
+# Here, although there is a variable number of receptors per epitope, the number of negative receptors is still 50, as the characteristics of the negative data are further constrained and not all will be successfully modeled by Rosetta
+n.negative <- 50
+exclude.source = "chan"
+# Additionally, the CMV epitope KLG is excluded from the list of negative epitopes as it is disproportionally represented in the dataset, as are highly prevalent epitopes from EBV (in order to avoid overfitting and possible cross-reactivity problems)
+all.reference.distinct <- all.reference.distinct %>% 
+    filter(!(Epitope %in% c("KLGGALQAK",
+        "AVFDRKSDAK",
+        "RAKFKQLL",
+        "IVTDFSVIK",
+        "RLRAEAQVK"
+    ))) 
+negative.data.large <- generateNegatives(all.reference.distinct, n.negative, target.epitope = NULL, target.epitopes.large, exclude.source)
+negative.data.large <- negative.data.large %>% 
+    group_by(Epitope) %>%   
+    mutate(clone.id = paste0("decoy_", Epitope, "_", row_number())) %>%
+    ungroup()
+
+write.csv(negative.data.large, "./data/piema-benchmark-negative-sequences-expanded-benchmark.csv", row.names = FALSE)
 
 # Randomly sample 50 receptors per epitope from high confidence dataset
 # In this dataset, 36 are known to be cross-reactive between GIL and YVL epitopes
@@ -84,6 +109,25 @@ positive.data.full <- high.confidence.full.similarity.90 %>%
 
 write.csv(positive.data.full, "./data/piema-benchmark-positive-sequences-full.csv", row.names = FALSE)
 
+# For the expanded benchmark dataset, the process differs a bit: 50 receptors are sampled from the high confidence dataset for each epitope with counts > 50 to avoid overfitting, but all receptors for epitopes with counts <= 50 are included
+positive.data.large <- high.confidence.similarity.90 %>% 
+    filter(Epitope %in% target.epitopes.large) %>%
+    group_by(Epitope) %>% 
+    mutate(n = n()) %>%
+    ungroup() %>%
+    filter(n > 50) %>%
+    group_by(Epitope) %>% 
+    sample_n(50) %>% 
+    ungroup() %>%
+    rbind(high.confidence.similarity.90 %>% filter(Epitope %in% target.epitopes.large) %>%
+        group_by(Epitope) %>% 
+        mutate(n = n()) %>%
+        ungroup() %>%
+        filter(n <= 50)%>% 
+        ungroup()) %>%
+    select(-n)
+
+write.csv(positive.data.large, "./data/piema-benchmark-positive-sequences-expanded-benchmark.csv", row.names = FALSE)
 
 # Final data for benchmarking matrix: 
 # True binders: 50 receptors per epitope
@@ -102,3 +146,10 @@ all.input.full <- rbind(
     negative.data.full %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ))
 
 write.csv(all.input.full, "./data/piema-benchmark-input-sequences-full.csv", row.names = FALSE)
+
+# Expanded benchmark dataset
+all.input.large <- rbind(
+    positive.data.large %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ),
+    negative.data.large %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ))
+
+write.csv(all.input.large, "./data/piema-benchmark-input-sequences-expanded-benchmark.csv", row.names = FALSE)

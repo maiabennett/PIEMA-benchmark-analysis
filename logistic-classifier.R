@@ -18,25 +18,31 @@ library(broom)
 library(viridis)
 library(ggrepel)
 
-# out.path <- "./analysis/classifier/run1/9-feature-set/with-NLV/"
-# out.path <- "./analysis/classifier/run1/9-feature-set/without-NLV/"
-# out.path <- "./analysis/classifier/run1/7-feature-set/with-NLV/"
-# out.path <- "./analysis/classifier/run1/7-feature-set/without-NLV/"
-# out.path <- "./analysis/classifier/run1/5-feature-set/with-NLV/"
-# out.path <- "./analysis/classifier/run1/5-feature-set/without-NLV/"
-# out.path <- "./analysis/classifier/run2/9-feature-set/with-NLV/"
-out.path <- "./analysis/classifier/run2/9-feature-set/without-NLV/"
-# out.path <- "./analysis/classifier/run2/7-feature-set/with-NLV/"
-# out.path <- "./analysis/classifier/run2/7-feature-set/without-NLV/"
-# out.path <- "./analysis/classifier/run2/5-feature-set/with-NLV/"
-# out.path <- "./analysis/classifier/run2/5-feature-set/without-NLV/"
-# input.path <- "./analysis/apbs/run1/"
-input.path <- "./analysis/apbs/run2/"
+# out.path <- "./analysis/classifier/run1/without-cross-reactives/9-feature-set/with-NLV/"
+# out.path <- "./analysis/classifier/run1/without-cross-reactives/9-feature-set/without-NLV/"
 
-# Save and load the workspace
-# save.image(file = "workspace.RData")
-# load(file = "workspace.RData")
+# out.path <- "./analysis/classifier/run1/without-cross-reactives/7-feature-set/with-NLV/"
+# out.path <- "./analysis/classifier/run1/without-cross-reactives/7-feature-set/without-NLV/"
 
+# out.path <- "./analysis/classifier/run1/without-cross-reactives/5-feature-set/with-NLV/"
+# out.path <- "./analysis/classifier/run1/without-cross-reactives/5-feature-set/without-NLV/"
+
+# out.path <- "./analysis/classifier/run2/without-cross-reactives/9-feature-set/with-NLV/"
+# out.path <- "./analysis/classifier/run2/without-cross-reactives/9-feature-set/without-NLV/"
+
+# out.path <- "./analysis/classifier/run2/without-cross-reactives/7-feature-set/with-NLV/"
+# out.path <- "./analysis/classifier/run2/without-cross-reactives/7-feature-set/without-NLV/"
+
+# out.path <- "./analysis/classifier/run2/without-cross-reactives/5-feature-set/with-NLV/"
+out.path <- "./analysis/classifier/with-cross-reactives/with-avg-eucdist/run2/5-feature-set/without-NLV/"
+
+# input.path <- "./analysis/apbs/run1/without-cross-reactives/with-NLV/"
+# input.path <- "./analysis/apbs/run1/without-cross-reactives/without-NLV/"
+# input.path <- "./analysis/apbs/run2/without-cross-reactives/with-NLV/"
+input.path <- "./analysis/apbs/with-cross-reactives/run2/"
+
+# Make analysis directory
+dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
 
 # This script uses tidymodels to train a logistic regression classifier on the PIEMA data
 # For this purpose, two models will be trained: 
@@ -50,10 +56,10 @@ piema.data <- read.csv(paste0(input.path, "final_receptor_data.csv")) %>%
         binding.pair.type = type, avg.euc.dist = avg.distance, avg.kas = avg.kdist, avg.spearman = avg.corr,
         kernel.count = count, pair.id = id, top.sg.id = top.sg_group)
 
-# If running without NLV
-piema.data <- piema.data %>%
-    filter(ref.epitope != "NLVPMVATV") %>%
-    filter(samp.epitope != "NLVPMVATV")
+# remove NLV
+piema.data <- piema.data %>% 
+    filter(!str_detect(ref.epitope, "NLV"), !str_detect(samp.epitope, "NLV"))
+
 
 # Prepare the data, adding a column to denote whether the receptor pairs share binding specificity (Yes) or not (No)
 # First,  we only want to use the "True binding pairs" and "Decoy binding pairs"
@@ -67,35 +73,35 @@ model2.data <- piema.data %>%
     mutate(shared.specificity = ifelse(binding.pair.type == "True receptor pairs", "Yes", "No"))%>%
     mutate(shared.specificity = as.factor(shared.specificity))
 
-model1.long <- model1.data %>% 
-    select(shared.specificity, top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity) %>%
-    pivot_longer(cols = c(top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity), names_to = "feature", values_to = "value")
+# model1.long <- model1.data %>% 
+#     select(shared.specificity, top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity) %>%
+#     pivot_longer(cols = c(top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity), names_to = "feature", values_to = "value")
 
-ggplot(model1.long, aes(x = shared.specificity, y = value, fill = feature)) +
-    geom_boxplot() +
-    facet_wrap(~feature, scales = "free", ncol = 5) +
-    scale_color_viridis_d(option = "plasma", begin = 0.1, end = 0.9) +
-    theme_minimal() +
-    theme(legend.position = "none", axis.title.x = element_blank(), 
-        strip.background = element_rect(fill = "lightgrey"), 
-        strip.text = element_text(color = "black", face = "bold"))
+# ggplot(model1.long, aes(x = shared.specificity, y = value, fill = feature)) +
+#     geom_boxplot() +
+#     facet_wrap(~feature, scales = "free", ncol = 5) +
+#     scale_fill_viridis_d(option = "plasma", begin = 0.1, end = 0.9) +
+#     theme_minimal() +
+#     theme(legend.position = "none", axis.title.x = element_blank(), 
+#         strip.background = element_rect(fill = "lightgrey"), 
+#         strip.text = element_text(color = "black", face = "bold"))
 
-ggsave(paste0(out.path, "model1_feature_boxplot.png"), width = 20, height = 10)
+# ggsave(paste0(out.path, "model1_feature_boxplot.png"), width = 20, height = 10)
 
-model2.long <- model2.data %>%
-    select(shared.specificity, top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity) %>%
-    pivot_longer(cols = c(top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity), names_to = "feature", values_to = "value")
+# model2.long <- model2.data %>%
+#     select(shared.specificity, top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity) %>%
+#     pivot_longer(cols = c(top.kas, avg.euc.dist, top.sg.euc.dist, avg.kas, avg.spearman, top.cosine.sim, top.sg.median.kas, kernel.count, CDR3.similarity, full.similarity), names_to = "feature", values_to = "value")
 
-ggplot(model2.long, aes(x = shared.specificity, y = value, fill = feature)) +
-    geom_boxplot() +
-    facet_wrap(~feature, scales = "free", ncol = 5) +
-    scale_color_viridis_d(option = "plasma", begin = 0.1, end = 0.9) +
-    theme_minimal() +
-    theme(legend.position = "none", axis.title.x = element_blank(), 
-        strip.background = element_rect(fill = "grey60"), 
-        strip.text = element_text(color = "white", face = "bold"))
+# ggplot(model2.long, aes(x = shared.specificity, y = value, fill = feature)) +
+#     geom_boxplot() +
+#     facet_wrap(~feature, scales = "free", ncol = 5) +
+#     scale_fill_viridis_d(option = "mako", begin = 0.1, end = 0.9) +
+#     theme_minimal() +
+#     theme(legend.position = "none", axis.title.x = element_blank(), 
+#         strip.background = element_rect(fill = "grey60"), 
+#         strip.text = element_text(color = "white", face = "bold"))
 
-ggsave(paste0(out.path, "model2_feature_boxplot.png"), width = 20, height = 10)
+# ggsave(paste0(out.path, "model2_feature_boxplot.png"), width = 20, height = 10)
 
 
 # Set seed for reproducibility
@@ -116,37 +122,43 @@ positive.class <- "Yes"
 negative.class <- "No"
 
 # Structure + sequence model formula
-# Nine feature set
-combined.model.form <- shared.specificity ~ avg.euc.dist + avg.kas + top.sg.median.kas + top.sg.euc.dist + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
-# Seven feature set
-# combined.model.form <- shared.specificity ~ top.sg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
-# Five feature set
-# combined.model.form <- shared.specificity ~ top.sg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity
-# Structure-only model formula
-# 7 features (in nine feature set)
-structure.model.form <- shared.specificity ~ avg.euc.dist + avg.kas + top.sg.median.kas + top.sg.euc.dist + avg.spearman + top.cosine.sim + kernel.count
-# 5 features (in seven feature set)
-# structure.model.form <- shared.specificity ~ top.sg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count 
-# 4 features (in five feature set)
-# structure.model.form <- shared.specificity ~  top.sg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count
-# Sequence-only model formula
-# 2 features (in nine and seven feature sets)
-sequence.model.form <- shared.specificity ~ CDR3.similarity + full.similarity
-# 1 feature (in five feature set)
-# sequence.model.form <- shared.specificity ~ CDR3.similarity
 
-# Define F beta metric
-# f_meas <- function(data, truth, estimate, na_rm = TRUE, ...) {
-#     yardstick::f_meas(
-#         data = data,
-#         truth = !!rlang::enquo(truth),
-#         estimate = !!rlang::enquo(estimate),
-#         beta = 0.5,
-#         na_rm = na_rm,
-#         ...
-#     )
-# }
-# f_meas <- new_class_metric(f_meas, direction = "maximize")
+# Nine feature set- sequence
+# combined.model.form <- shared.specificity ~ avg.euc.dist + avg.kas + top.sg.median.kas + top.sg.euc.dist + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
+# Structure-only model formulas
+# 7 features
+# structure.model.form <- shared.specificity ~ avg.euc.dist + avg.kas + top.sg.median.kas + top.sg.euc.dist + avg.spearman + top.cosine.sim + kernel.count
+# Sequence model
+# 2 features (in nine and seven feature sets)
+# sequence.model.form <- shared.specificity ~ CDR3.similarity + full.similarity
+
+
+# Seven feature set- sequence with top sg euc dist
+# combined.model.form <- shared.specificity ~ top.sg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
+# With avg euc dist
+# combined.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
+# Structure formula
+# 5 features with top sg euc dist
+# structure.model.form <- shared.specificity ~ top.sg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count 
+# With avg euc dist
+# structure.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + top.cosine.sim + kernel.count 
+# Sequence formula
+# 2 features (in nine and seven feature sets)
+# sequence.model.form <- shared.specificity ~ CDR3.similarity + full.similarity
+
+# Five feature set- sequence with top sg euc dist
+# combined.model.form <- shared.specificity ~ top.sg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity
+# With avg euc dist
+combined.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity
+# Structure-only model formula 
+# 4 features (in five feature set) with top sg euc dist
+structure.model.form <- shared.specificity ~  top.sg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count
+# With avg euc dist
+# structure.model.form <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count
+# Sequence-only model formula
+# 1 feature (in five feature set)
+sequence.model.form <- shared.specificity ~ CDR3.similarity
+
 
 classification.metrics <- metric_set(
     yardstick::accuracy, 
@@ -347,7 +359,6 @@ sequence.model2.train.metrics <- sequence.model2.fit %>%
     collect_metrics()
 
 # Fetch the best model by the specified metric 
-# metric.for.selection <- "f_meas"
 metric.for.selection <- "recall"
 
 combined.model1.best.fit <- combined.model1.fit %>%
@@ -849,7 +860,7 @@ combined.model1.yvl.roc <- combined.model1.final.fit %>%
 combined.model1.epitope.roc <- bind_rows(combined.model1.gil.roc, 
     combined.model1.gil.yvl.roc, 
     combined.model1.glc.roc, 
-    # combined.model1.nlv.roc, 
+    combined.model1.nlv.roc, 
     combined.model1.rpi.roc, 
     combined.model1.ylq.roc, 
     combined.model1.yvl.roc)  %>%
@@ -897,7 +908,7 @@ combined.model1.yvl.roc.wc <- combined.model1.final.fit.with.crossreactives %>%
 combined.model1.epitope.roc.wc <- bind_rows(combined.model1.gil.roc.wc, 
     combined.model1.gil.yvl.roc.wc, 
     combined.model1.glc.roc, 
-    # combined.model1.nlv.roc, 
+    combined.model1.nlv.roc, 
     combined.model1.rpi.roc, 
     combined.model1.ylq.roc, 
     combined.model1.yvl.roc.wc)  %>%
@@ -973,7 +984,7 @@ structure.model1.yvl.roc <- structure.model1.final.fit %>%
 structure.model1.epitope.roc <- bind_rows(structure.model1.gil.roc, 
     structure.model1.gil.yvl.roc, 
     structure.model1.glc.roc, 
-    # structure.model1.nlv.roc, 
+    structure.model1.nlv.roc, 
     structure.model1.rpi.roc,
     structure.model1.ylq.roc, 
     structure.model1.yvl.roc)  %>%
@@ -1021,7 +1032,7 @@ structure.model1.yvl.roc.wc <- structure.model1.final.fit.with.crossreactives %>
 structure.model1.epitope.roc.wc <- bind_rows(structure.model1.gil.roc.wc, 
     structure.model1.gil.yvl.roc.wc, 
     structure.model1.glc.roc, 
-    # structure.model1.nlv.roc, 
+    structure.model1.nlv.roc, 
     structure.model1.rpi.roc, 
     structure.model1.ylq.roc, 
     structure.model1.yvl.roc.wc)  %>%
@@ -1097,7 +1108,7 @@ sequence.model1.yvl.roc <- sequence.model1.final.fit %>%
 sequence.model1.epitope.roc <- bind_rows(sequence.model1.gil.roc, 
     sequence.model1.gil.yvl.roc, 
     sequence.model1.glc.roc, 
-    # sequence.model1.nlv.roc, 
+    sequence.model1.nlv.roc, 
     sequence.model1.rpi.roc, 
     sequence.model1.ylq.roc, 
     sequence.model1.yvl.roc)  %>%
@@ -1145,7 +1156,7 @@ sequence.model1.yvl.roc.wc <- sequence.model1.final.fit.with.crossreactives %>%
 sequence.model1.epitope.roc.wc <- bind_rows(sequence.model1.gil.roc.wc, 
     sequence.model1.gil.yvl.roc.wc, 
     sequence.model1.glc.roc, 
-    # sequence.model1.nlv.roc, 
+    sequence.model1.nlv.roc, 
     sequence.model1.rpi.roc, 
     sequence.model1.ylq.roc, 
     sequence.model1.yvl.roc.wc)  %>%
@@ -1484,7 +1495,7 @@ combined.model1.yvl.pr <- combined.model1.final.fit %>%
 combined.model1.epitope.pr <- bind_rows(combined.model1.gil.pr, 
     combined.model1.gil.yvl.pr, 
     combined.model1.glc.pr, 
-    # combined.model1.nlv.pr, 
+    combined.model1.nlv.pr, 
     combined.model1.rpi.pr, 
     combined.model1.ylq.pr, 
     combined.model1.yvl.pr)  %>%
@@ -1531,7 +1542,7 @@ combined.model1.yvl.pr.wc <- combined.model1.final.fit.with.crossreactives %>%
 combined.model1.epitope.pr.wc <- bind_rows(combined.model1.gil.pr.wc, 
     combined.model1.gil.yvl.pr.wc, 
     combined.model1.glc.pr, 
-    # combined.model1.nlv.pr, 
+    combined.model1.nlv.pr, 
     combined.model1.rpi.pr, 
     combined.model1.ylq.pr, 
     combined.model1.yvl.pr.wc)  %>%
@@ -1607,7 +1618,7 @@ structure.model1.yvl.pr <- structure.model1.final.fit %>%
 structure.model1.epitope.pr <- bind_rows(structure.model1.gil.pr, 
     structure.model1.gil.yvl.pr, 
     structure.model1.glc.pr, 
-    # structure.model1.nlv.pr, 
+    structure.model1.nlv.pr, 
     structure.model1.rpi.pr, 
     structure.model1.ylq.pr, 
     structure.model1.yvl.pr)  %>%
@@ -1654,7 +1665,7 @@ structure.model1.yvl.pr.wc <- structure.model1.final.fit.with.crossreactives %>%
 structure.model1.epitope.pr.wc <- bind_rows(structure.model1.gil.pr.wc, 
     structure.model1.gil.yvl.pr.wc, 
     structure.model1.glc.pr, 
-    # structure.model1.nlv.pr, 
+    structure.model1.nlv.pr, 
     structure.model1.rpi.pr, 
     structure.model1.ylq.pr, 
     structure.model1.yvl.pr.wc)  %>%
@@ -1730,7 +1741,7 @@ sequence.model1.yvl.pr <- sequence.model1.final.fit %>%
 sequence.model1.epitope.pr <- bind_rows(sequence.model1.gil.pr, 
     sequence.model1.gil.yvl.pr, 
     sequence.model1.glc.pr, 
-    # sequence.model1.nlv.pr, 
+    sequence.model1.nlv.pr, 
     sequence.model1.rpi.pr, 
     sequence.model1.ylq.pr, 
     sequence.model1.yvl.pr)  %>%
@@ -1777,7 +1788,7 @@ sequence.model1.yvl.pr.wc <- sequence.model1.final.fit.with.crossreactives %>%
 sequence.model1.epitope.pr.wc <- bind_rows(sequence.model1.gil.pr.wc, 
     sequence.model1.gil.yvl.pr.wc, 
     sequence.model1.glc.pr, 
-    # sequence.model1.nlv.pr, 
+    sequence.model1.nlv.pr, 
     sequence.model1.rpi.pr, 
     sequence.model1.ylq.pr, 
     sequence.model1.yvl.pr.wc)  %>%
@@ -2095,7 +2106,7 @@ combined.model2.yvl.roc <- combined.model2.final.fit.expanded %>%
 combined.model2.epitope.roc <- bind_rows(combined.model2.gil.roc, 
     combined.model2.gil.yvl.roc, 
     combined.model2.glc.roc, 
-    # combined.model2.nlv.roc, 
+    combined.model2.nlv.roc, 
     combined.model2.rpi.roc, 
     combined.model2.ylq.roc, 
     combined.model2.yvl.roc) %>%
@@ -2170,7 +2181,7 @@ structure.model2.yvl.roc <- structure.model2.final.fit %>%
 structure.model2.epitope.roc <- bind_rows(structure.model2.gil.roc, 
     structure.model2.gil.yvl.roc, 
     structure.model2.glc.roc, 
-    # structure.model2.nlv.roc, 
+    structure.model2.nlv.roc, 
     structure.model2.rpi.roc, 
     structure.model2.ylq.roc, 
     structure.model2.yvl.roc)  %>%
@@ -2245,7 +2256,7 @@ sequence.model2.yvl.roc <- sequence.model2.final.fit %>%
 sequence.model2.epitope.roc <- bind_rows(sequence.model2.gil.roc, 
     sequence.model2.gil.yvl.roc, 
     sequence.model2.glc.roc, 
-    # sequence.model2.nlv.roc, 
+    sequence.model2.nlv.roc, 
     sequence.model2.rpi.roc, 
     sequence.model2.ylq.roc, 
     sequence.model2.yvl.roc)  %>%
@@ -2474,7 +2485,7 @@ combined.model2.yvl.pr <- combined.model2.final.fit.expanded %>%
 combined.model2.epitope.pr <- bind_rows(combined.model2.gil.pr, 
     combined.model2.gil.yvl.pr, 
     combined.model2.glc.pr, 
-    # combined.model2.nlv.pr, 
+    combined.model2.nlv.pr, 
     combined.model2.rpi.pr, 
     combined.model2.ylq.pr, 
     combined.model2.yvl.pr) %>%
@@ -2548,7 +2559,7 @@ structure.model2.yvl.pr <- structure.model2.final.fit %>%
 structure.model2.epitope.pr <- bind_rows(structure.model2.gil.pr, 
     structure.model2.gil.yvl.pr, 
     structure.model2.glc.pr, 
-    # structure.model2.nlv.pr, 
+    structure.model2.nlv.pr, 
     structure.model2.rpi.pr, 
     structure.model2.ylq.pr, 
     structure.model2.yvl.pr) %>%
@@ -2623,7 +2634,7 @@ sequence.model2.yvl.pr <- sequence.model2.final.fit %>%
 sequence.model2.epitope.pr <- bind_rows(sequence.model2.gil.pr, 
     sequence.model2.gil.yvl.pr, 
     sequence.model2.glc.pr, 
-    # sequence.model2.nlv.pr, 
+    sequence.model2.nlv.pr, 
     sequence.model2.rpi.pr, 
     sequence.model2.ylq.pr, 
     sequence.model2.yvl.pr) %>%
