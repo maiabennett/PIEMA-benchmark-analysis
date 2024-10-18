@@ -9,3 +9,10 @@ workspace.RData
 
 logistic-classifier.R
 logistic-classifier-analysis-old.R
+
+# First (failed) runs
+run1/
+run2/
+
+# All plots (can be self-generated)
+*.png
