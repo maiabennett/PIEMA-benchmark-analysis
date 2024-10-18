@@ -65,8 +65,8 @@ target.epitopes.info.large <- fetchEpitopes(high.confidence.similarity.90, colum
 target.epitopes.large <- target.epitopes.info.large %>% 
     filter(Epitope != "YVLDHLIVV") %>%
     pull(Epitope)
-# Here, although there is a variable number of receptors per epitope, the number of negative receptors is still 50, as the characteristics of the negative data are further constrained and not all will be successfully modeled by Rosetta
-n.negative <- 50
+# Here, although there is a variable number of receptors per epitope, the number of negative receptors is 30, as the characteristics of the negative data are further constrained and not all will be successfully modeled by Rosetta
+n.negative <- 30
 exclude.source = "chan"
 # Additionally, the CMV epitope KLG is excluded from the list of negative epitopes as it is disproportionally represented in the dataset, as are highly prevalent epitopes from EBV (in order to avoid overfitting and possible cross-reactivity problems)
 all.reference.distinct <- all.reference.distinct %>% 
@@ -109,23 +109,12 @@ positive.data.full <- high.confidence.full.similarity.90 %>%
 
 write.csv(positive.data.full, "./data/piema-benchmark-positive-sequences-full.csv", row.names = FALSE)
 
-# For the expanded benchmark dataset, the process differs a bit: 50 receptors are sampled from the high confidence dataset for each epitope with counts > 50 to avoid overfitting, but all receptors for epitopes with counts <= 50 are included
+# For the expanded benchmark dataset, the process differs a bit: 30 receptors are sampled from the high confidence dataset for each epitope with counts > 25 are included, as there may be a number of receptors that fail to be modeled by Rosetta
 positive.data.large <- high.confidence.similarity.90 %>% 
     filter(Epitope %in% target.epitopes.large) %>%
     group_by(Epitope) %>% 
-    mutate(n = n()) %>%
-    ungroup() %>%
-    filter(n > 50) %>%
-    group_by(Epitope) %>% 
-    sample_n(50) %>% 
-    ungroup() %>%
-    rbind(high.confidence.similarity.90 %>% filter(Epitope %in% target.epitopes.large) %>%
-        group_by(Epitope) %>% 
-        mutate(n = n()) %>%
-        ungroup() %>%
-        filter(n <= 50)%>% 
-        ungroup()) %>%
-    select(-n)
+    sample_n(30) %>% 
+    ungroup() 
 
 write.csv(positive.data.large, "./data/piema-benchmark-positive-sequences-expanded-benchmark.csv", row.names = FALSE)
 

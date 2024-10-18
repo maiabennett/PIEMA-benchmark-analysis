@@ -1,0 +1,884 @@
+---
+title: "PIEMA Logistic Classifier with Sequence Features"
+author: "Maia Bennett-Boehm"
+date: "2024-10-11"
+output: html_document
+---
+
+# Introduction
+
+This document describes the process of training the PIEMA logistic regression classifier using sequence. The script generates a number of plots (feature box plots, ROC and PR curves) and outputs (metrics, coefficients) for preliminary analysis based on feature selection criteria. These plots are generated automatically but are further refined and exhibited in `logistic-classifier-plots.R` and `logistic-classifier-analysis.R`, which facilitate more in-depth analysis of optimal model data curation and feature selection approaches.
+
+```{r setup, include=FALSE}
+
+# Load the necessary libraries
+library(GGally)
+library(skimr)
+library(DataExplorer)
+library(caret) # for nicer confusion matrix
+library(discrim) # for discriminant analysis
+library(tidyverse)
+library(tidymodels)
+library(themis)
+library(broom)
+library(viridis)
+library(ggrepel)
+library(knitr)
+library(parsnip)
+library(glmnet)
+library(DT)
+
+knitr::chunk_opts$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+```
+
+# Model implementation
+
+This script uses tidymodels to train a logistic regression classifier on the PIEMA data. For this purpose, two models will be trained: 
+
+1. A model that uses only "True binding pairs" (positive data) and "Decoy binding pairs" (negative data)
+
+2. A model that uses all data, including "True binding pairs" (positive data) and "Decoy binding pairs" and "Unlikely binding pairs" (negative data)
+
+
+```{r paths, include=FALSE}
+# Paths
+out.path <- "./analysis/classifier/without-cross-reactives/run1/with-NLV/"
+input.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV/"
+
+# out.path <- "./analysis/classifier/without-cross-reactives/run1/without-NLV/"
+# input.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV/"
+
+# out.path <- "./analysis/classifier/without-cross-reactives/run2/with-NLV/"
+# input.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV/"
+
+# out.path <- "./analysis/classifier/without-cross-reactives/run2/without-NLV/"
+# input.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV/"
+
+dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
+
+```
+
+
+```{r prepare-data, include=FALSE}
+
+# Load the data
+piema.data <- read.csv(paste0(input.path, "final_receptor_data.csv")) %>%
+    dplyr::rename(top.kas = top.kdist, top.spearman = top.corr, top.euc.dist = top.distance, 
+        top.sg.euc.dist = top.patDist, top.cosine.sim = top.shapSim, top.sg.median.kas = top.med_scr, 
+        binding.pair.type = type, avg.euc.dist = avg.distance, avg.kas = avg.kdist, avg.spearman = avg.corr,
+        kernel.count = count, pair.id = id, top.sg.id = top.sg_group)
+
+# Prepare the data, adding a column to denote whether the receptor pairs share binding specificity (Yes) or not (No)
+# First,  we only want to use the "True binding pairs" and "Decoy binding pairs"
+model1.data <- piema.data %>% 
+    filter(binding.pair.type == "True receptor pairs" | binding.pair.type == "Decoy receptor pairs") %>%
+    mutate(shared.specificity = ifelse(binding.pair.type == "True receptor pairs", "Yes", "No")) %>%
+    mutate(shared.specificity = as.factor(shared.specificity))
+
+# Next, we want to use all data
+model2.data <- piema.data %>%
+    mutate(shared.specificity = ifelse(binding.pair.type == "True receptor pairs", "Yes", "No"))%>%
+    mutate(shared.specificity = as.factor(shared.specificity))
+
+# Set seed for reproducibility
+set.seed(77482951)
+
+# Split the data into training and testing sets
+model1.split <- initial_split(model1.data, prop = 0.75, strata = shared.specificity)
+model1.train <- training(model1.split)
+model1.test <- testing(model1.split)
+
+model2.split <- initial_split(model2.data, prop = 0.75, strata = shared.specificity)
+model2.train <- training(model2.split)
+model2.test <- testing(model2.split)
+
+# Define the variables of interest and recipe for the logistic regression model
+target.var <- "shared.specificity"
+positive.class <- "Yes"
+negative.class <- "No"
+
+```
+
+## Feature Selection
+
+Three feature sets will be used for the logistic regression models: one including CDR3 and full sequence similarity, and one each including single features (CDR3 or full sequence similarity). The models will be trained using these feature sets to assess the impact of these sequence components on model performance.
+
+
+```{r recipes, include=FALSE}
+
+# CDR3 + full sequence similarity
+model.form.both <- shared.specificity ~ CDR3.similarity + full.similarity
+
+# CDR3 only
+model.form.cdr3 <- shared.specificity ~ CDR3.similarity
+
+# Full sequence similarity only
+model.form.full <- shared.specificity ~ full.similarity
+
+
+# Define the recipes for the logistic regression models: downsampling, dummy encoding, and normalization
+model1.recipe.both <- recipe(model.form.both, data = model1.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+model2.recipe.both <- recipe(model.form.both, data = model2.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+
+
+model1.recipe.cdr3 <- recipe(model.form.cdr3, data = model1.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+model2.recipe.cdr3 <- recipe(model.form.cdr3, data = model2.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+
+model1.recipe.full <- recipe(model.form.full, data = model1.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+model2.recipe.full <- recipe(model.form.full, data = model2.train) %>%
+    step_dummy(all_nominal(), -all_outcomes()) %>%
+    step_normalize(all_predictors()) %>%
+    step_downsample(target.var)
+
+```
+
+## Model Training
+
+The logistic regression models will be trained using the tidymodels framework. The models will be trained using 10-fold cross-validation and the following metrics: accuracy, kappa, ROC AUC, PR AUC, mean log loss, sensitivity, specificity, F-measure, precision, recall, and balanced accuracy. 
+
+```{r model-definition, include=FALSE}
+
+classification.metrics <- metric_set(
+    yardstick::accuracy, 
+    yardstick::kap, 
+    yardstick::roc_auc, 
+    yardstick::pr_auc,
+    yardstick::mn_log_loss, 
+    yardstick::sens, 
+    yardstick::spec, 
+    yardstick::f_meas,
+    yardstick::precision,
+    yardstick::recall,
+    yardstick::bal_accuracy,
+    ) 
+
+# Define the logistic regression model and workflow for both models
+logreg.model <- 
+    logistic_reg() %>%
+    set_engine("glm") %>%
+    set_mode("classification") 
+
+# Define workflows
+model1.workflow.both <- workflow() %>%
+    add_recipe(model1.recipe.both) %>%
+    add_model(logreg.model)
+model2.workflow.both <- workflow() %>%
+    add_recipe(model2.recipe.both) %>%
+    add_model(logreg.model)
+
+model1.workflow.cdr3 <- workflow() %>%
+    add_recipe(model1.recipe.cdr3) %>%
+    add_model(logreg.model)
+model2.workflow.cdr3 <- workflow() %>%
+    add_recipe(model2.recipe.cdr3) %>%
+    add_model(logreg.model)
+
+model1.workflow.full <- workflow() %>%
+    add_recipe(model1.recipe.full) %>%
+    add_model(logreg.model)
+model2.workflow.full <- workflow() %>%
+    add_recipe(model2.recipe.full) %>%
+    add_model(logreg.model)
+
+
+# Specify resamples and CV folds
+set.seed(77482951)
+control <- control_resamples(save_pred = TRUE,
+                            event_level = "second")
+
+model1.cv.folds <- vfold_cv(model1.train, v = 10)
+model2.cv.folds <- vfold_cv(model2.train, v = 10)
+
+
+```
+
+
+```{r model-training, include=FALSE}
+
+# Fit models on training data
+model1.fit.both <- model1.workflow.both %>% 
+    fit_resamples(
+        resamples = model1.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+model2.fit.both <- model2.workflow.both %>%
+    fit_resamples(
+        resamples = model2.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+model1.fit.cdr3 <- model1.workflow.cdr3 %>%
+    fit_resamples(
+        resamples = model1.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+model2.fit.cdr3 <- model2.workflow.cdr3 %>%
+    fit_resamples(
+        resamples = model2.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+model1.fit.full <- model1.workflow.full %>%
+    fit_resamples(
+        resamples = model1.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+model2.fit.full <- model2.workflow.full %>%
+    fit_resamples(
+        resamples = model2.cv.folds,
+        control = control,
+        metrics = classification.metrics)
+
+
+```
+
+Training these models results in the performance metrics for each model shown below. 
+
+```{r initial-model-evaluation, include=FALSE}
+
+# Fetch training predictions
+model1.train.pred.both <- model1.fit.both %>%
+    collect_predictions()
+model2.train.pred.both <- model2.fit.both %>%
+    collect_predictions()
+
+model1.train.pred.cdr3 <- model1.fit.cdr3 %>%
+    collect_predictions()
+model2.train.pred.cdr3 <- model2.fit.cdr3 %>%
+    collect_predictions()
+
+model1.train.pred.full <- model1.fit.full %>%
+    collect_predictions()
+model2.train.pred.full <- model2.fit.full %>%
+    collect_predictions()
+
+# Calculate and store metrics
+model1.train.metrics.both <- model1.fit.both %>%
+    collect_metrics()
+model2.train.metrics.both <- model2.fit.both %>%
+    collect_metrics()
+
+model1.train.metrics.cdr3 <- model1.fit.cdr3 %>%
+    collect_metrics()
+model2.train.metrics.cdr3 <- model2.fit.cdr3 %>%
+    collect_metrics()
+
+model1.train.metrics.full <- model1.fit.full %>%
+    collect_metrics()
+model2.train.metrics.full <- model2.fit.full %>%
+    collect_metrics()
+
+
+# Combine all training metrics
+model1.train.metrics <- model1.train.metrics.both %>%
+    select(.metric, mean) %>%
+    mutate(mean = round(mean, 3)) %>%
+    dplyr::rename(both = mean) %>%
+    bind_cols(model1.train.metrics.cdr3 %>% 
+        select(mean) %>% 
+        mutate(mean = round(mean, 3)) %>%
+        dplyr::rename(cdr3 = mean)) %>%
+    bind_cols(model1.train.metrics.full %>%
+        select(mean) %>%
+        mutate(mean = round(mean, 3)) %>%
+        dplyr::rename(full = mean))
+
+model2.train.metrics <- model2.train.metrics.both %>%
+    select(.metric, mean) %>%
+    mutate(mean = round(mean, 3)) %>%
+    dplyr::rename(both = mean) %>%
+    bind_cols(model2.train.metrics.cdr3 %>% 
+        select(mean) %>% 
+        mutate(mean = round(mean, 3)) %>%
+        dplyr::rename(cdr3 = mean)) %>%
+    bind_cols(model2.train.metrics.full %>%
+        select(mean) %>%
+        mutate(mean = round(mean, 3)) %>%
+        dplyr::rename(full = mean))
+
+datatable(model1.train.metrics %>% dplyr::rename(metrics = .metric), 
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Training metrics: True positive pairs vs. decoy pairs")
+
+datatable(model2.train.metrics, extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Training metrics: True positive pairs vs. unlikely + decoy pairs")
+
+```
+
+## Model Evaluation
+
+After initial evaluation on training cross-validation splits, the models are fitted to the full training set and evaluated for their performance on the test data. The metrics for the test data are shown below. These results are further analyzed in `logistic-classifier-plots.R` and `logistic-classifier-analysis.R`.
+
+
+```{r model-test, include=FALSE}
+
+# Fit models on all train data and evaluate on test data
+model1.test.fit.both <- model1.workflow.both %>%
+    last_fit(model1.split, 
+        metrics = classification.metrics)
+model2.test.fit.both <- model2.workflow.both %>%
+    last_fit(model2.split, 
+        metrics = classification.metrics)
+
+model1.test.fit.cdr3 <- model1.workflow.cdr3 %>%
+    last_fit(model1.split, 
+        metrics = classification.metrics)
+model2.test.fit.cdr3 <- model2.workflow.cdr3 %>%
+    last_fit(model2.split, 
+        metrics = classification.metrics)
+
+model1.test.fit.full <- model1.workflow.full %>%
+    last_fit(model1.split, 
+        metrics = classification.metrics)
+model2.test.fit.full <- model2.workflow.full %>%
+    last_fit(model2.split, 
+        metrics = classification.metrics)
+
+# Collect test predictions
+model1.test.pred.both <- model1.test.fit.both %>%
+    collect_predictions() %>%
+    left_join((model1.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model2.test.pred.both <- model2.test.fit.both %>%
+    collect_predictions() %>%
+    left_join((model2.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model1.test.pred.cdr3 <- model1.test.fit.cdr3 %>%
+    collect_predictions() %>%
+    left_join((model1.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model2.test.pred.cdr3 <- model2.test.fit.cdr3 %>%
+    collect_predictions() %>%
+    left_join((model2.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model1.test.pred.full <- model1.test.fit.full %>%
+    collect_predictions() %>%
+    left_join((model1.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+model2.test.pred.full <- model2.test.fit.full %>%
+    collect_predictions() %>%
+    left_join((model2.data %>% 
+        mutate(row.number = row_number())), 
+        by = join_by("shared.specificity", ".row" == "row.number"))
+
+# Collect test metrics
+model1.test.metrics.both <- model1.test.pred.both %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+model2.test.metrics.both <- model2.test.pred.both %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+
+model1.test.metrics.cdr3 <- model1.test.pred.cdr3 %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+model2.test.metrics.cdr3 <- model2.test.pred.cdr3 %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+
+model1.test.metrics.full <- model1.test.pred.full %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+
+model2.test.metrics.full <- model2.test.pred.full %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = 'second')
+
+# Combine and print test metrics
+model1.test.metrics <- model1.test.metrics.both %>%
+    select(.metric, .estimate) %>%
+    mutate(.estimate = round(.estimate, 3)) %>%
+    dplyr::rename(both = .estimate) %>%
+    bind_cols(model1.test.metrics.cdr3 %>% 
+        select(.estimate) %>% 
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(cdr3 = .estimate)) %>%
+    bind_cols(model1.test.metrics.full %>% 
+        select(.estimate) %>% 
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(full = .estimate))
+
+model2.test.metrics <- model2.test.metrics.both %>%
+    select(.metric, .estimate) %>%
+    mutate(.estimate = round(.estimate, 3)) %>%
+    dplyr::rename(both = .estimate) %>%
+    bind_cols(model2.test.metrics.cdr3 %>% 
+        select(.estimate) %>% 
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(cdr3 = .estimate)) %>%
+    bind_cols(model2.test.metrics.full %>% 
+        select(.estimate) %>% 
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(full = .estimate))
+
+datatable(model1.test.metrics %>% dplyr::rename(metrics = .metric), 
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Test metrics: True positive pairs vs. decoy pairs")
+
+datatable(model2.test.metrics,
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Test metrics: True positive pairs vs. unlikely + decoy pairs")
+
+```
+
+```{r performance-plots, include=FALSE, results = 'asis'}
+
+cat("### Confusion matrices\n\n")
+cat("#### Model 1: True positive pairs vs. decoy pairs, all features\n")
+(model1.cm.both <- confusionMatrix(data = model1.test.pred.both$.pred_class, 
+    reference = model1.test[[target.var]], 
+    positive = positive.class))
+
+cat("#### Model 1: True positive pairs vs. decoy pairs, limited features\n")
+(model1.cm.cdr3 <- confusionMatrix(data = model1.test.pred.cdr3$.pred_class, 
+    reference = model1.test[[target.var]], 
+    positive = positive.class)  )
+
+cat("#### Model 1: True positive pairs vs. decoy pairs, best tuned model\n")
+(model1.cm.full <- confusionMatrix(data = model1.test.pred.full$.pred_class, 
+    reference = model1.test[[target.var]], 
+    positive = positive.class))
+
+cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs, all features\n")
+(model2.cm.both <- confusionMatrix(data = model2.test.pred.both$.pred_class,
+    reference = model2.test[[target.var]], 
+    positive = positive.class))
+
+cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs, limited features\n")
+(model2.cm.cdr3 <- confusionMatrix(data = model2.test.pred.cdr3$.pred_class,
+    reference = model2.test[[target.var]], 
+    positive = positive.class)  )
+
+cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs, best tuned model\n")
+(model2.cm.full <- confusionMatrix(data = model2.test.pred.full$.pred_class,
+    reference = model2.test[[target.var]], 
+    positive = positive.class))
+
+cat("### ROC and PR curves")
+cat("#### Model 1: True positive pairs vs. decoy pairs\n")
+bind_rows((model1.test.pred.both %>%
+    roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>% 
+    mutate(model = paste("Full + CDR3 sequence similarity\nROC AUC = ", 
+        ROC_AUC = round(model1.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(both), 3)))),
+    (model1.test.pred.cdr3 %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("CDR3 sequence similarity\nROC AUC = ", 
+            ROC_AUC = round(model1.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(cdr3), 3)))),
+    (model1.test.pred.full %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Full sequence similarity\nROC AUC = ", 
+            ROC_AUC = round(model1.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(full), 3))))) %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, color = model, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    geom_abline(lty = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "ROC curve", x = "1 - Specificity", y = "Sensitivity")
+
+ggsave(paste0(out.path, "sequence_features_model1_roc_curve.png"), width = 10, height = 8)
+
+bind_rows((model1.test.pred.both %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(model = paste("Full + CDR3 sequence similarity\nPR AUC = ", 
+        PR_AUC = round(model1.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(both), 3)))),
+    (model1.test.pred.cdr3 %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("CDR3 sequence similarity\nPR AUC = ", 
+            PR_AUC = round(model1.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(cdr3), 3)))),
+    (model1.test.pred.full %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Full sequence similarity\nPR AUC = ", 
+            PR_AUC = round(model1.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(full), 3))))) %>%
+    ggplot(aes(x = recall, y = precision, color = model, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    coord_equal() +
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "PR curve", x = "Recall", y = "Precision")
+
+ggsave(paste0(out.path, "sequence_features_model1_pr_curve.png"), width = 10, height = 6)
+
+cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs\n")
+
+bind_rows((model2.test.pred.both %>%
+    roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>% 
+    mutate(model = paste("Full + CDR3 sequence similarity\nROC AUC = ", 
+        ROC_AUC = round(model2.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(both), 3)))),
+    (model2.test.pred.cdr3 %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("CDR3 sequence similarity\nROC AUC = ", 
+            ROC_AUC = round(model2.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(cdr3), 3)))),
+    (model2.test.pred.full %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Full sequence similarity\nROC AUC = ", 
+            ROC_AUC = round(model2.test.metrics %>% filter(.metric == 'roc_auc') %>% pull(full), 3))))) %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, color = model, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    geom_abline(lty = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "mako", begin = 0.2, end = 0.8) +
+    labs(title = "ROC curve", x = "1 - Specificity", y = "Sensitivity")
+
+ggsave(paste0(out.path, "sequence_features_model2_roc_curve.png"), width = 10, height = 8)
+
+bind_rows((model2.test.pred.both %>%
+    pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+    mutate(model = paste("Full + CDR3 sequence similarity\nPR AUC = ", 
+        PR_AUC = round(model2.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(both), 3)))),
+    (model2.test.pred.cdr3 %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("CDR3 sequence similarity\nPR AUC = ", 
+            PR_AUC = round(model2.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(cdr3), 3)))),
+    (model2.test.pred.full %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = paste("Full sequence similarity\nPR AUC = ", 
+            PR_AUC = round(model2.test.metrics %>% filter(.metric == 'pr_auc') %>% pull(full), 3))))) %>%
+    ggplot(aes(x = recall, y = precision, color = model, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    coord_equal() + 
+    scale_color_viridis_d(option = "mako", begin = 0.2, end = 0.8) +
+    labs(title = "PR curve", x = "Recall", y = "Precision")
+
+ggsave(paste0(out.path, "sequence_features_model2_pr_curve.png"), width = 10, height = 8)
+
+
+```
+
+### Per-epitope model evaluation
+
+
+```{r per-epitope-evaluation, include=FALSE}
+
+# Metrics
+model1.epitope.metrics <- (model1.test.pred.both %>%
+    group_by(ref.epitope) %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = "second") %>%
+    select(ref.epitope, .metric, .estimate) %>%
+    mutate(.estimate = round(.estimate, 3)) %>% 
+    dplyr::rename(both = .estimate)) %>%
+    bind_cols((model1.test.pred.cdr3 %>%
+        group_by(ref.epitope) %>%
+        classification.metrics(truth = shared.specificity,
+            estimate = .pred_class,
+            .pred_Yes,
+            event_level = "second") %>%
+        select(.estimate) %>%
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(cdr3 = .estimate))) %>%
+    bind_cols((model1.test.pred.full %>%
+        group_by(ref.epitope) %>%
+        classification.metrics(truth = shared.specificity,
+            estimate = .pred_class,
+            .pred_Yes,
+            event_level = "second") %>%
+        select(.estimate) %>%
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(full = .estimate)))
+
+
+model2.epitope.metrics <- (model2.test.pred.both %>%
+    mutate(epitope = ref.epitope) %>%
+    bind_rows(model2.test.pred.both %>%
+        filter(ref.epitope != samp.epitope) %>%
+        mutate(epitope = samp.epitope)) %>%
+    group_by(epitope) %>%
+    classification.metrics(truth = shared.specificity,
+        estimate = .pred_class,
+        .pred_Yes,
+        event_level = "second") %>%
+    select(epitope, .metric, .estimate) %>%
+    mutate(.estimate = round(.estimate, 3)) %>% 
+    dplyr::rename(both = .estimate)) %>%
+    bind_cols((model2.test.pred.cdr3 %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.cdr3 %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        classification.metrics(truth = shared.specificity,
+            estimate = .pred_class,
+            .pred_Yes,
+            event_level = "second") %>%
+        select(.estimate) %>%
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(cdr3 = .estimate))) %>%
+    bind_cols((model2.test.pred.full %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.full %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        classification.metrics(truth = shared.specificity,
+            estimate = .pred_class,
+            .pred_Yes,
+            event_level = "second") %>%
+        select(.estimate) %>%
+        mutate(.estimate = round(.estimate, 3)) %>%
+        dplyr::rename(full = .estimate)))
+
+datatable(model1.epitope.metrics %>% dplyr::rename(metrics = .metric),
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Model 1: Per-epitope test metrics")
+
+datatable(model2.epitope.metrics %>% dplyr::rename(metrics = .metric),
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Model 2: Per-epitope test metrics")
+
+
+# ROC + PR AUC
+cat("#### Model 1: Per-epitope ROC and PR curves\n")
+
+bind_rows(
+    (model1.test.pred.both %>%
+        group_by(ref.epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Full + CDR3 sequence similarity")),
+    (model1.test.pred.cdr3 %>%
+        group_by(ref.epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "CDR3 sequence similarity")),
+    (model1.test.pred.full %>%
+        group_by(ref.epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Full sequence similarity"))
+    ) %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, color = ref.epitope, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    geom_abline(lty = 3) + 
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "ROC curve", x = "1 - Specificity", y = "Sensitivity")
+
+ggsave(paste0(out.path, "sequence_features_model1_per_epitope_roc_curve.png"), width = 15, height = 12)
+
+bind_rows(
+    (model1.test.pred.both %>%
+        group_by(ref.epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Full + CDR3 sequence similarity")),
+    (model1.test.pred.cdr3 %>%
+        group_by(ref.epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "CDR3 sequence similarity")),
+    (model1.test.pred.full %>%
+        group_by(ref.epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Full sequence similarity"))
+    ) %>%
+    ggplot(aes(x = recall, y = precision, color = ref.epitope, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    coord_equal() + 
+    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    labs(title = "PR curve", x = "Recall", y = "Precision")
+
+ggsave(paste0(out.path, "sequence_features_model1_per_epitope_pr_curve.png"), width = 15, height = 12)
+
+cat("#### Model 2: Per-epitope ROC and PR curves\n")
+bind_rows(
+    (model1.test.pred.both %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.both %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Full + CDR3 sequence similarity")),
+    (model1.test.pred.cdr3 %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.cdr3 %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "CDR3 sequence similarity")),
+    (model1.test.pred.full %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.full %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        roc_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Full sequence similarity"))
+    ) %>%
+    ggplot(aes(x = 1 - specificity, y = sensitivity, color = epitope, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    geom_abline(lty = 3) +
+    coord_equal() +
+    scale_color_viridis_d(option = "mako", begin = 0.2, end = 0.8) +
+    labs(title = "ROC curve", x = "1 - Specificity", y = "Sensitivity")
+
+ggsave(paste0(out.path, "sequence_features_model2_per_epitope_roc_curve.png"), width = 15, height = 12)
+
+bind_rows(
+    (model1.test.pred.both %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.both %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Full + CDR3 sequence similarity")),
+    (model1.test.pred.cdr3 %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.cdr3 %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "CDR3 sequence similarity")),
+    (model1.test.pred.full %>%
+        mutate(epitope = ref.epitope) %>%
+        bind_rows(model2.test.pred.full %>%
+            filter(ref.epitope != samp.epitope) %>%
+            mutate(epitope = samp.epitope)) %>%
+        group_by(epitope) %>%
+        pr_curve(truth = shared.specificity, .pred_Yes, event_level = "second") %>%
+        mutate(model = "Full sequence similarity"))
+    ) %>%
+    ggplot(aes(x = recall, y = precision, color = epitope, linetype = model)) +
+    geom_path(lwd = 1.5, alpha = 0.6) +
+    coord_equal() + 
+    scale_color_viridis_d(option = "mako", begin = 0.2, end = 0.8) +
+    labs(title = "PR curve", x = "Recall", y = "Precision")
+
+ggsave(paste0(out.path, "sequence_features_model2_per_epitope_pr_curve.png"), width = 15, height = 12)
+
+
+
+```
+
+
+### Feature Importance
+
+
+```{r coefficients, include=FALSE}
+
+model1.coefficients <- (model1.test.fit.both %>%
+    extract_fit_engine() %>%
+    broom::tidy() %>%
+    select(term, estimate, p.value) %>%
+    dplyr::rename(both = estimate, both.p.value = p.value)) %>%
+    full_join(model1.test.fit.cdr3 %>%
+        extract_fit_engine() %>%
+        broom::tidy() %>%
+        select(term, estimate, p.value) %>%
+        dplyr::rename(cdr3 = estimate, cdr3.p.value = p.value),
+        by = "term") %>%
+    full_join(model1.test.fit.full %>% 
+        extract_fit_engine() %>%
+        broom::tidy() %>% 
+        select(term, estimate, p.value) %>% 
+        dplyr::rename(full = estimate, full.p.value = p.value),
+        by = "term") 
+
+model2.coefficients <- (model2.test.fit.both %>%
+    extract_fit_engine() %>%
+    broom::tidy() %>%
+    select(term, estimate, p.value) %>%
+    dplyr::rename(both = estimate, both.p.value = p.value)) %>%
+    full_join(model2.test.fit.cdr3 %>%
+        extract_fit_engine() %>%
+        broom::tidy() %>%
+        select(term, estimate, p.value) %>%
+        dplyr::rename(cdr3 = estimate, cdr3.p.value = p.value),
+        by = "term") %>%
+    full_join(model2.test.fit.full %>% 
+        extract_fit_engine() %>%
+        broom::tidy() %>% 
+        select(term, estimate, p.value) %>% 
+        dplyr::rename(full = estimate, full.p.value = p.value),
+        by = "term") 
+
+datatable(model1.coefficients,
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Model 1: Coefficients for all, limited, and tuned feature sets")
+
+datatable(model2.coefficients,
+    extensions = c('Scroller'),
+    options = list(dom='t', scrollX=TRUE, deferRender=TRUE, scrollY=200, scroller=TRUE),
+    caption = "Model 2: Coefficients for all, limited, and tuned feature sets")
+
+
+```
+
+
+```{r write-results, include=FALSE}
+
+write.csv(model1.train.pred.both, paste0(out.path, "sequence_features_model1_train_pred_both_features.csv"), row.names = FALSE)
+write.csv(model2.train.pred.both, paste0(out.path, "sequence_features_model2_train_pred_both_features.csv"), row.names = FALSE)
+write.csv(model1.train.pred.cdr3, paste0(out.path, "sequence_features_model1_train_pred_CDR3.csv"), row.names = FALSE)
+write.csv(model2.train.pred.cdr3, paste0(out.path, "sequence_features_model2_train_pred_CDR3.csv"), row.names = FALSE)
+write.csv(model1.train.pred.full, paste0(out.path, "sequence_features_model1_train_pred_full_seq.csv"), row.names = FALSE)
+write.csv(model2.train.pred.full, paste0(out.path, "sequence_features_model2_train_pred_full_seq.csv"), row.names = FALSE)
+
+write.csv(model1.train.metrics, paste0(out.path, "sequence_features_model1_train_metrics.csv"), row.names = FALSE)
+write.csv(model2.train.metrics, paste0(out.path, "sequence_features_model2_train_metrics.csv"), row.names = FALSE)
+
+write.csv(model1.test.pred.both, paste0(out.path, "sequence_features_model1_test_pred_both_features.csv"), row.names = FALSE)
+write.csv(model2.test.pred.both, paste0(out.path, "sequence_features_model2_test_pred_both_features.csv"), row.names = FALSE)
+write.csv(model1.test.pred.cdr3, paste0(out.path, "sequence_features_model1_test_pred_CDR3.csv"), row.names = FALSE)
+write.csv(model2.test.pred.cdr3, paste0(out.path, "sequence_features_model2_test_pred_CDR3.csv"), row.names = FALSE)
+write.csv(model1.test.pred.full, paste0(out.path, "sequence_features_model1_test_pred_full_seq.csv"), row.names = FALSE)
+write.csv(model2.test.pred.full, paste0(out.path, "sequence_features_model2_test_pred_full_seq.csv"), row.names = FALSE)
+
+write.csv(model1.test.metrics, paste0(out.path, "sequence_features_model1_test_metrics.csv"), row.names = FALSE)
+write.csv(model2.test.metrics, paste0(out.path, "sequence_features_model2_test_metrics.csv"), row.names = FALSE)
+
+write.csv(model1.epitope.metrics, paste0(out.path, "sequence_features_model1_epitope_metrics.csv"), row.names = FALSE)
+write.csv(model2.epitope.metrics, paste0(out.path, "sequence_features_model2_epitope_metrics.csv"), row.names = FALSE)
+
+write.csv(model1.coefficients, paste0(out.path, "sequence_features_model1_coefficients.csv"), row.names = FALSE)
+write.csv(model2.coefficients, paste0(out.path, "sequence_features_model2_coefficients.csv"), row.names = FALSE)
+
+
+```

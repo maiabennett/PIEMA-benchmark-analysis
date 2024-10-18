@@ -49,11 +49,11 @@ This script uses tidymodels to train a logistic regression classifier on the PIE
 # out.path <- "./analysis/classifier/without-cross-reactives/run1/without-NLV/"
 # input.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV/"
 
-out.path <- "./analysis/classifier/without-cross-reactives/run2/with-NLV/"
-input.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV/"
+# out.path <- "./analysis/classifier/without-cross-reactives/run2/with-NLV/"
+# input.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV/"
 
-# out.path <- "./analysis/classifier/without-cross-reactives/run2/without-NLV/"
-# input.path <- "./analysis/without-cross-reactives/apbs/run2/without-NLV/"
+out.path <- "./analysis/classifier/without-cross-reactives/run2/without-NLV/"
+input.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV/"
 
 dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
 
@@ -111,7 +111,7 @@ Three feature sets will be used for the logistic regression models: all combined
 model.form.all.features <- shared.specificity ~ avg.euc.dist + avg.kas + top.sg.median.kas + top.sg.euc.dist + avg.spearman + top.cosine.sim + kernel.count + CDR3.similarity + full.similarity
 
 # Limited feature set, including average euclidean distance
-model.form.limited.features <- shared.specificity ~ avg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity
+model.form.limited.features <- shared.specificity ~  avg.euc.dist + top.sg.median.kas + avg.spearman + kernel.count + CDR3.similarity
 
 
 # Define the recipes for the logistic regression models: downsampling, dummy encoding, and normalization
@@ -502,29 +502,29 @@ cat("#### Model 1: True positive pairs vs. decoy pairs, all features\n")
     positive = positive.class))
 
 cat("#### Model 1: True positive pairs vs. decoy pairs, limited features\n")
-model1.cm.limited.features <- confusionMatrix(data = model1.test.pred.limited.features$.pred_class, 
+(model1.cm.limited.features <- confusionMatrix(data = model1.test.pred.limited.features$.pred_class, 
     reference = model1.test[[target.var]], 
-    positive = positive.class)  
+    positive = positive.class)  )
 
 cat("#### Model 1: True positive pairs vs. decoy pairs, best tuned model\n")
-model1.cm.best.tune <- confusionMatrix(data = model1.test.pred.best.tune$.pred_class, 
+(model1.cm.best.tune <- confusionMatrix(data = model1.test.pred.best.tune$.pred_class, 
     reference = model1.test[[target.var]], 
-    positive = positive.class)
+    positive = positive.class))
 
 cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs, all features\n")
-model2.cm.all.features <- confusionMatrix(data = model2.test.pred.all.features$.pred_class,
+(model2.cm.all.features <- confusionMatrix(data = model2.test.pred.all.features$.pred_class,
     reference = model2.test[[target.var]], 
-    positive = positive.class)
+    positive = positive.class))
 
 cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs, limited features\n")
-model2.cm.limited.features <- confusionMatrix(data = model2.test.pred.limited.features$.pred_class,
+(model2.cm.limited.features <- confusionMatrix(data = model2.test.pred.limited.features$.pred_class,
     reference = model2.test[[target.var]], 
-    positive = positive.class)  
+    positive = positive.class)  )
 
 cat("#### Model 2: True positive pairs vs. unlikely + decoy pairs, best tuned model\n")
-model2.cm.best.tune <- confusionMatrix(data = model2.test.pred.best.tune$.pred_class,
+(model2.cm.best.tune <- confusionMatrix(data = model2.test.pred.best.tune$.pred_class,
     reference = model2.test[[target.var]], 
-    positive = positive.class)
+    positive = positive.class))
 
 cat("### ROC and PR curves")
 cat("#### Model 1: True positive pairs vs. decoy pairs\n")
@@ -587,7 +587,7 @@ bind_rows((model2.test.pred.all.features %>%
     geom_path(lwd = 1.5, alpha = 0.6) +
     geom_abline(lty = 3) + 
     coord_equal() + 
-    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    scale_color_viridis_d(option = "mako", begin = 0.2, end = 0.8) +
     labs(title = "ROC curve", x = "1 - Specificity", y = "Sensitivity")
 
 ggsave(paste0(out.path, "combined_features_model2_roc_curve.png"), width = 10, height = 8)
@@ -607,7 +607,7 @@ bind_rows((model2.test.pred.all.features %>%
     ggplot(aes(x = recall, y = precision, color = model, linetype = model)) +
     geom_path(lwd = 1.5, alpha = 0.6) +
     coord_equal() + 
-    scale_color_viridis_d(option = "plasma", begin = 0.2, end = 0.8) +
+    scale_color_viridis_d(option = "mako", begin = 0.2, end = 0.8) +
     labs(title = "PR curve", x = "Recall", y = "Precision")
 
 ggsave(paste0(out.path, "combined_features_model2_pr_curve.png"), width = 10, height = 8)

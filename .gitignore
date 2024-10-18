@@ -6,3 +6,6 @@ sankey*/
 *.RData
 *.RData
 workspace.RData
+
+logistic-classifier.R
+logistic-classifier-analysis-old.R

@@ -11,24 +11,29 @@ library(tidyverse)
 
 # Specify paths
 # negative.data.path <- "./results/run1/negative/easymifs/CMET/"
-# positive.data.path <- "./results/run1/positive/easymifs/CMET"
-# out.path <- "./analysis/easymifs/run1/CMET"
+# positive.data.path <- "./results/run1/positive/easymifs/CMET/"
+# out.path <- "./analysis/easymifs/run1/CMET/"
 
 # negative.data.path <- "./results/run1/negative/easymifs/OP/"
-# positive.data.path <- "./results/run1/positive/easymifs/OP"
-# out.path <- "./analysis/easymifs/run1/OP"
+# positive.data.path <- "./results/run1/positive/easymifs/OP/"
+# out.path <- "./analysis/easymifs/run1/OP/"
 
 # negative.data.path <- "./results/run1/negative/apbs/"
-# positive.data.path <- "./results/run1/positive/apbs"
-# out.path <- "./analysis/apbs/with-cross-reactives/run1"
-# out.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV"
-# out.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV"
+# positive.data.path <- "./results/run1/positive/apbs/"
+# out.path <- "./analysis/apbs/with-cross-reactives/run1/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV/"
 
-negative.data.path <- "./results/run2/negative/"
-positive.data.path <- "./results/run2/positive"
-# out.path <- "./analysis/apbs/with-cross-reactives/run2"
-# out.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV"
-out.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV"
+# negative.data.path <- "./results/run2/negative/"
+# positive.data.path <- "./results/run2/positive/"
+# out.path <- "./analysis/apbs/with-cross-reactives/run2/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV/"
+
+negative.data.path <- "./results/run3/negative/"
+positive.data.path <- "./results/run3/positive/"
+out.path <- "./analysis/apbs/without-cross-reactives/run3/with-NLV/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run3/without-NLV/"
 
 
 # Make analysis directory
@@ -37,7 +42,7 @@ dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
 
 # Import data
 negative.data <- data.frame()
-positive.data <- read.csv(paste0(positive.data.path, "/positive_final_results.csv"))
+positive.data <- read.csv(paste0(positive.data.path, "positive_final_results.csv"))
 
 # Import all .csv files in the folder "./results/negative/apbs" and append them to negative.data
 files <- list.files(path = negative.data.path, pattern = "*.csv", full.names = TRUE)
@@ -131,9 +136,9 @@ count.method.data <- unique.receptor.data %>%
     pivot_wider(names_from = method, values_from = count, values_fill = list(count = 0))
 
 # Write data 
-write.csv(unique.receptor.data, file = paste0(out.path, "/final_unique_receptors.csv"), row.names = FALSE)
-write.csv(count.receptor.data, file = paste0(out.path, "/final_receptor_counts.csv"), row.names = FALSE)
-write.csv(count.method.data, file = paste0(out.path, "/final_method_counts.csv"), row.names = FALSE)
+write.csv(unique.receptor.data, file = paste0(out.path, "final_unique_receptors.csv"), row.names = FALSE)
+write.csv(count.receptor.data, file = paste0(out.path, "final_receptor_counts.csv"), row.names = FALSE)
+write.csv(count.method.data, file = paste0(out.path, "final_method_counts.csv"), row.names = FALSE)
 
 
 # Separate receptor:receptor pairs into true positive matches (same epitope), decoy receptor pairs (different epitopes), and unlikely receptor pairs (non-matches)
@@ -166,11 +171,6 @@ all.data <- bind_rows(
 # Remove erroneous YVL-GIL decoys
 all.data <- all.data %>%
     filter(!(ref.epitope == "YVLDHLIVV" & samp.epitope == "GILGFVFTL" & type == "Decoy receptor pairs"))
-
-
-# Write data
-write.csv(all.data, file = paste0(out.path, "/final_all_kernels_data.csv"), row.names = FALSE)
-
 
 # Make subgraph, receptor, and master information tables
 # Data table for receptor:receptor subgraphs
@@ -231,11 +231,21 @@ all.receptor.data <- all.receptor.data %>%
         -CDR1a.samp, -CDR2a.samp, -CDR2.5a.samp, -CDR1b.samp, -CDR2b.samp, -CDR2.5b.samp,
         -full.seq.ref, -full.seq.samp, -CDRcombined.ref, -CDRcombined.samp, -CDR3combined.ref, -CDR3combined.samp)
 
+# Perform a final filtering step to exclude receptor pairs that slipped by the initial filtering
+threshold <- 0.9
+# threshold.feature <- "CDR3.similarity"
+threshold.feature <- "full.similarity"
 all.receptor.data <- all.receptor.data %>%
-    filter(!(ref.epitope == "YVLDHLIVV" & samp.epitope == "GILGFVFTL" & type == "Decoy receptor pairs"))
+    filter(!!sym(threshold.feature) <= threshold)
+
+# Filter kernel matches based on receptor pair matches
+all.data <- all.data %>%
+    filter(id %in% all.receptor.data$id)
+
 
 # Write final data to file
-write.csv(all.receptor.data, file = paste0(out.path, "/final_receptor_data.csv"), row.names = FALSE)
+write.csv(all.data, file = paste0(out.path, "final_all_kernels_data.csv"), row.names = FALSE)
+write.csv(all.receptor.data, file = paste0(out.path, "final_receptor_data.csv"), row.names = FALSE)
 
 
 # Master data table
@@ -293,7 +303,7 @@ all.data.master <- bind_rows(all.data.master,
 
 
 # Export data
-write.csv(all.data.master, file = paste0(out.path, "/results_master.csv"), row.names = FALSE)
+write.csv(all.data.master, file = paste0(out.path, "results_master.csv"), row.names = FALSE)
 
 
 # Select plots of particular interest from plot-results.R
