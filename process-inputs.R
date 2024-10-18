@@ -116,7 +116,7 @@ positive.data.large <- high.confidence.similarity.90 %>%
     sample_n(30) %>% 
     ungroup() 
 
-write.csv(positive.data.large, "./data/piema-benchmark-positive-sequences-expanded-benchmark.csv", row.names = FALSE)
+write.csv(positive.data.large, "./data/piema-benchmark-positive-sequences-expanded.csv", row.names = FALSE)
 
 # Final data for benchmarking matrix: 
 # True binders: 50 receptors per epitope
@@ -141,4 +141,4 @@ all.input.large <- rbind(
     positive.data.large %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ),
     negative.data.large %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ))
 
-write.csv(all.input.large, "./data/piema-benchmark-input-sequences-expanded-benchmark.csv", row.names = FALSE)
+write.csv(all.input.large, "./data/piema-benchmark-input-sequences-expanded.csv", row.names = FALSE)

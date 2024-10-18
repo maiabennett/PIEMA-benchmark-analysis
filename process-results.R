@@ -32,8 +32,10 @@ library(tidyverse)
 
 negative.data.path <- "./results/run3/negative/"
 positive.data.path <- "./results/run3/positive/"
-out.path <- "./analysis/apbs/without-cross-reactives/run3/with-NLV/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run3/without-NLV/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/with-NLV/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/without-NLV/"
+out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/with-NLV/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/without-NLV/"
 
 
 # Make analysis directory
@@ -88,59 +90,15 @@ negative.data <- negative.data %>%
 positive.data <- positive.data %>%
     filter(!(str_detect(ref.epitope, remove.substring) | str_detect(samp.epitope, remove.substring)))
 
-remove.substring <- "NLVPMVATV"
-negative.data <- negative.data %>%
-    filter(!(str_detect(ref.epitope, remove.substring) | str_detect(samp.epitope, remove.substring)))
-positive.data <- positive.data %>%
-    filter(!(str_detect(ref.epitope, remove.substring) | str_detect(samp.epitope, remove.substring)))
+# remove.substring <- "NLVPMVATV"
+# negative.data <- negative.data %>%
+#     filter(!(str_detect(ref.epitope, remove.substring) | str_detect(samp.epitope, remove.substring)))
+# positive.data <- positive.data %>%
+#     filter(!(str_detect(ref.epitope, remove.substring) | str_detect(samp.epitope, remove.substring)))
+
+
 
 # Combine data for various results files
-# Count the number of receptors and receptor data sources for each epitope
-# Combine unique values of ref.id and ref.epitope with samp.id and samp.epitope
-unique.receptor.data <- bind_rows(
-    negative.data %>% select(id = ref.id, epitope = ref.epitope),
-    negative.data %>% select(id = samp.id, epitope = samp.epitope),
-    positive.data %>% select(id = ref.id, epitope = ref.epitope),
-    positive.data %>% select(id = samp.id, epitope = samp.epitope)
-) %>% distinct()
-
-# Add decoy substring to epitope where decoy is present in id
-unique.receptor.data <- unique.receptor.data %>%
-    mutate(epitope = case_when(
-        str_detect(id, "decoy") ~ paste0(epitope, " (decoy)"),
-        TRUE ~ epitope
-    ))
-
-# Count the number of receptors for each epitope
-count.receptor.data <- unique.receptor.data %>%
-    group_by(epitope) %>%
-    summarise(count = n_distinct(id))
-
-# Reshape so that counts for epitopes with substring "(decoy)"" are added as a separate column to the original epitope
-count.receptor.data <- count.receptor.data %>%
-    separate(epitope, into = c("epitope", "decoy"), sep = " \\(") %>%
-    pivot_wider(names_from = decoy, values_from = count, values_fill = list(count = 0)) %>%
-    dplyr::rename_with(~ c("positive", "decoy"), .cols = 2:3)
-
-# Then, add counts where epitope == "GILGFVFTL_YVLDHLIVV" to counts where epitope == "YVLDHLIVV" and remove original row
-count.receptor.data <- count.receptor.data %>%
-    mutate(positive = ifelse(epitope == "YVLDHLIVV", positive + count.receptor.data$positive[count.receptor.data$epitope == "GILGFVFTL_YVLDHLIVV"], positive)) %>%
-    filter(epitope != "GILGFVFTL_YVLDHLIVV")
-
-# Additionally, for positive data, add data counts for a new table
-count.method.data <- unique.receptor.data %>%
-    mutate(method = str_extract(id, "^[^_]+")) %>%
-    filter(method != "decoy") %>%
-    group_by(epitope, method) %>%
-    summarise(count = n_distinct(id)) %>%
-    pivot_wider(names_from = method, values_from = count, values_fill = list(count = 0))
-
-# Write data 
-write.csv(unique.receptor.data, file = paste0(out.path, "final_unique_receptors.csv"), row.names = FALSE)
-write.csv(count.receptor.data, file = paste0(out.path, "final_receptor_counts.csv"), row.names = FALSE)
-write.csv(count.method.data, file = paste0(out.path, "final_method_counts.csv"), row.names = FALSE)
-
-
 # Separate receptor:receptor pairs into true positive matches (same epitope), decoy receptor pairs (different epitopes), and unlikely receptor pairs (non-matches)
 # Separate positive data into true positive matches (same epitope) and unlikely matches (different epitopes)
 # Define a function to check for complex matches
@@ -197,11 +155,15 @@ all.receptor.data <- all.receptor.data %>%
 # Import initial data
 # positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences.csv") 
 # negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences.csv")
-positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences-full.csv") 
-negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences-full.csv")
+# positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences-full.csv") 
+# negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences-full.csv")
+positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences-expanded.csv") 
+negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences-expanded.csv")
 reference.data <- positive.reference.data %>%
-    select(all_of(names(negative.reference.data))) %>%
-    rbind(negative.reference.data) %>% 
+    select(all_of(names(negative.reference.data %>% 
+        select(-True.epitope, -True.epitope.gene, -True.epitope.species)))) %>%
+    rbind(negative.reference.data %>% 
+        select(-True.epitope, -True.epitope.gene, -True.epitope.species)) %>% 
     select(clone.id, CDR1a, CDR2a, CDR2.5a, CDR3a, CDR1b, CDR2b, CDR2.5b, CDR3b, full.seq)
 
 # Join to results
@@ -247,6 +209,48 @@ all.data <- all.data %>%
 write.csv(all.data, file = paste0(out.path, "final_all_kernels_data.csv"), row.names = FALSE)
 write.csv(all.receptor.data, file = paste0(out.path, "final_receptor_data.csv"), row.names = FALSE)
 
+# Count the number of receptors and receptor data sources for each epitope
+# Combine unique values of ref.id and ref.epitope with samp.id and samp.epitope
+unique.receptor.data <- bind_rows(
+    all.receptor.data %>% select(id = ref.id, epitope = ref.epitope),
+    all.receptor.data %>% select(id = samp.id, epitope = samp.epitope)
+) %>% distinct()
+
+# Add decoy substring to epitope where decoy is present in id
+unique.receptor.data <- unique.receptor.data %>%
+    mutate(epitope = case_when(
+        str_detect(id, "decoy") ~ paste0(epitope, " (decoy)"),
+        TRUE ~ epitope
+    ))
+
+# Count the number of receptors for each epitope
+count.receptor.data <- unique.receptor.data %>%
+    group_by(epitope) %>%
+    summarise(count = n_distinct(id))
+
+# Reshape so that counts for epitopes with substring "(decoy)"" are added as a separate column to the original epitope
+count.receptor.data <- count.receptor.data %>%
+    separate(epitope, into = c("epitope", "decoy"), sep = " \\(") %>%
+    pivot_wider(names_from = decoy, values_from = count, values_fill = list(count = 0)) %>%
+    dplyr::rename_with(~ c("positive", "decoy"), .cols = 2:3)
+
+# Then, add counts where epitope == "GILGFVFTL_YVLDHLIVV" to counts where epitope == "YVLDHLIVV" and remove original row
+count.receptor.data <- count.receptor.data %>%
+    mutate(positive = ifelse(epitope == "YVLDHLIVV", positive + count.receptor.data$positive[count.receptor.data$epitope == "GILGFVFTL_YVLDHLIVV"], positive)) %>%
+    filter(epitope != "GILGFVFTL_YVLDHLIVV")
+
+# Additionally, for positive data, add data counts for a new table
+count.method.data <- unique.receptor.data %>%
+    mutate(method = str_extract(id, "^[^_]+")) %>%
+    filter(method != "decoy") %>%
+    group_by(epitope, method) %>%
+    summarise(count = n_distinct(id)) %>%
+    pivot_wider(names_from = method, values_from = count, values_fill = list(count = 0))
+
+# Write data 
+write.csv(unique.receptor.data, file = paste0(out.path, "final_unique_receptors.csv"), row.names = FALSE)
+write.csv(count.receptor.data, file = paste0(out.path, "final_receptor_counts.csv"), row.names = FALSE)
+write.csv(count.method.data, file = paste0(out.path, "final_method_counts.csv"), row.names = FALSE)
 
 # Master data table
 # Includes number of kernel matches, number of receptor matches, average kernel matches per receptor, average KAS per receptor for each ref.epitope:samp.epitope pairing

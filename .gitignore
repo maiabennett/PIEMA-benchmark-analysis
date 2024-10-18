@@ -13,6 +13,7 @@ logistic-classifier-analysis-old.R
 # First (failed) runs
 run1/
 run2/
+with-cross-reactives/
 
-# All plots (can be self-generated)
-*.png
+# All kernels data (too large)
+final_all_kernels_data.csv
