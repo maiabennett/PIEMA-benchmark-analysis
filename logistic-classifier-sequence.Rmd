@@ -43,8 +43,8 @@ This script uses tidymodels to train a logistic regression classifier on the PIE
 
 ```{r paths, include=FALSE}
 # Paths
-out.path <- "./analysis/classifier/without-cross-reactives/run1/with-NLV/"
-input.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV/"
+# out.path <- "./analysis/classifier/without-cross-reactives/run1/with-NLV/"
+# input.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV/"
 
 # out.path <- "./analysis/classifier/without-cross-reactives/run1/without-NLV/"
 # input.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV/"
@@ -55,6 +55,12 @@ input.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV/"
 # out.path <- "./analysis/classifier/without-cross-reactives/run2/without-NLV/"
 # input.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV/"
 
+# out.path <- "./analysis/classifier/without-cross-reactives/run3/CDR3-similarity/all/"
+# input.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/all/"
+
+out.path <- "./analysis/classifier/without-cross-reactives/run3/full-similarity/all/"
+input.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/all/"
+
 dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
 
 ```
@@ -64,10 +70,17 @@ dir.create(out.path, showWarnings = FALSE, recursive = TRUE)
 
 # Load the data
 piema.data <- read.csv(paste0(input.path, "final_receptor_data.csv")) %>%
-    dplyr::rename(top.kas = top.kdist, top.spearman = top.corr, top.euc.dist = top.distance, 
-        top.sg.euc.dist = top.patDist, top.cosine.sim = top.shapSim, top.sg.median.kas = top.med_scr, 
-        binding.pair.type = type, avg.euc.dist = avg.distance, avg.kas = avg.kdist, avg.spearman = avg.corr,
-        kernel.count = count, pair.id = id, top.sg.id = top.sg_group)
+    dplyr::rename(
+        # Metrics specific to top-scoring (KAS) kernel match
+        top.kas = top.kdist, top.spearman = top.corr, top.euc.dist = top.distance, 
+        # Metrics specific to subgraph with top-scoring (KAS) kernel match
+        top.sg.euc.dist = top.patDist, top.sg.cosine.sim = top.shapSim, top.sg.median.kas = top.med_scr, 
+        # Metrics averaged across all kernel matches per receptor pair
+        avg.euc.dist = avg.distance, avg.kas = avg.kdist, avg.spearman = avg.corr,
+        # Kernel count
+        kernel.count = count, 
+        # Descriptors
+        binding.pair.type = type, pair.id = id, top.sg.id = top.sg_group)
 
 # Prepare the data, adding a column to denote whether the receptor pairs share binding specificity (Yes) or not (No)
 # First,  we only want to use the "True binding pairs" and "Decoy binding pairs"

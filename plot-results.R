@@ -27,9 +27,9 @@ library(DataExplorer)
 # out.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV/"
 # out.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV/"
 
-out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/with-NLV/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/all/"
 # out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/without-NLV/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/with-NLV/"
+out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/all/"
 # out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/without-NLV/"
 
 

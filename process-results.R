@@ -32,9 +32,9 @@ library(tidyverse)
 
 negative.data.path <- "./results/run3/negative/"
 positive.data.path <- "./results/run3/positive/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/with-NLV/"
+out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/all/"
+# out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/all/"
 # out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/without-NLV/"
-out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/with-NLV/"
 # out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/without-NLV/"
 
 
@@ -195,8 +195,8 @@ all.receptor.data <- all.receptor.data %>%
 
 # Perform a final filtering step to exclude receptor pairs that slipped by the initial filtering
 threshold <- 0.9
-# threshold.feature <- "CDR3.similarity"
-threshold.feature <- "full.similarity"
+threshold.feature <- "CDR3.similarity"
+# threshold.feature <- "full.similarity"
 all.receptor.data <- all.receptor.data %>%
     filter(!!sym(threshold.feature) <= threshold)
 
@@ -235,9 +235,16 @@ count.receptor.data <- count.receptor.data %>%
     dplyr::rename_with(~ c("positive", "decoy"), .cols = 2:3)
 
 # Then, add counts where epitope == "GILGFVFTL_YVLDHLIVV" to counts where epitope == "YVLDHLIVV" and remove original row
+# count.receptor.data <- count.receptor.data %>%
+#     mutate(positive = ifelse(epitope == "YVLDHLIVV", positive + count.receptor.data$positive[count.receptor.data$epitope == "GILGFVFTL_YVLDHLIVV"], positive)) %>%
+#     filter(epitope != "GILGFVFTL_YVLDHLIVV")
+
+# Bind to Epitope, Epitope gene, and Epitope species
+epitope.data <- positive.reference.data %>% 
+    distinct(Epitope, Epitope.species, Epitope.gene)
+
 count.receptor.data <- count.receptor.data %>%
-    mutate(positive = ifelse(epitope == "YVLDHLIVV", positive + count.receptor.data$positive[count.receptor.data$epitope == "GILGFVFTL_YVLDHLIVV"], positive)) %>%
-    filter(epitope != "GILGFVFTL_YVLDHLIVV")
+    left_join(epitope.data, by = c("epitope" = "Epitope"))
 
 # Additionally, for positive data, add data counts for a new table
 count.method.data <- unique.receptor.data %>%
