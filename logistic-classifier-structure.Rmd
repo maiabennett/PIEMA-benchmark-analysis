@@ -7,7 +7,7 @@ output: html_document
 
 # Introduction
 
-This document describes the process of training the PIEMA logistic regression classifier using structure features. The script generates a number of plots (feature box plots, ROC and PR curves) and outputs (metrics, coefficients) for preliminary analysis based on feature selection criteria. These plots are generated automatically but are further refined and exhibited in `logistic-classifier-plots.R` and `logistic-classifier-analysis.R`, which facilitate more in-depth analysis of optimal model data curation and feature selection approaches.
+This document describes the process of training the PIEMA logistic regression classifier using structure features. The script generates a number of plots (feature box plots, ROC and PR curves) and outputs (metrics, coefficients) for preliminary analysis based on feature selection criteria. These plots are generated automatically but are further refined in `logistic-classifier-analysis.R`, which facilitates more in-depth analysis of optimal model data curation and feature selection approaches.
 
 ```{r setup, include=FALSE}
 
