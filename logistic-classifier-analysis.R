@@ -1664,6 +1664,9 @@ model1.preds <- model1.preds %>%
 model2.preds <- model2.preds %>%
     mutate(shared.specificity = factor(shared.specificity, levels = c("No", "Yes")))
 
+write.csv(model1.preds, paste0(out.path, "all_model1_preds.csv"), row.names = FALSE)
+write.csv(model2.preds, paste0(out.path, "all_model2_preds.csv"), row.names = FALSE)
+
 # Model 1
 # ROC AUC curves
 # Color by LogReg approach, linetype by Feature

@@ -17,3 +17,4 @@ with-cross-reactives/
 
 # All kernels data (too large)
 final_all_kernels_data.csv
+all_model2_preds.csv
