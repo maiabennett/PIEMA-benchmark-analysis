@@ -10,11 +10,20 @@ workspace.RData
 logistic-classifier.R
 logistic-classifier-analysis-old.R
 
-# First (failed) runs
+# Initial discarded runs
 run1/
 run2/
 with-cross-reactives/
+without-cross-reactives/
+high-confidence-full-similarity-90-paired-sequences.csv
+piema-benchmark-input-sequences-full.csv
+piema-benchmark-positive-sequences-full.csv
+piema-benchmark-negative-sequences-full.csv
+piema-benchmark-input-sequences.csv
+piema-benchmark-positive-sequences.csv
+piema-benchmark-negative-sequences.csv
 
-# All kernels data (too large)
+# All kernels data (too large, .tar file compression instead)
 final_all_kernels_data.csv
+all_model1_preds.csv
 all_model2_preds.csv

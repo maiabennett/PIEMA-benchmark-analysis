@@ -9,7 +9,7 @@
 library(tidyverse)
 
 # Import the data
-input.path <- "./analysis/classifier/without-cross-reactives/run3/"
+input.path <- "./analysis/classifier/"
 out.path <- "./analysis/case-study/"
 model1.preds <- read_csv(paste0(input.path, "all_model1_preds.csv"))
 model2.preds <- read_csv(paste0(input.path, "all_model2_preds.csv"))

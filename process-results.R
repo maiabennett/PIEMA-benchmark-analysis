@@ -10,32 +10,10 @@
 library(tidyverse)
 
 # Specify paths
-# negative.data.path <- "./results/run1/negative/easymifs/CMET/"
-# positive.data.path <- "./results/run1/positive/easymifs/CMET/"
-# out.path <- "./analysis/easymifs/run1/CMET/"
-
-# negative.data.path <- "./results/run1/negative/easymifs/OP/"
-# positive.data.path <- "./results/run1/positive/easymifs/OP/"
-# out.path <- "./analysis/easymifs/run1/OP/"
-
-# negative.data.path <- "./results/run1/negative/apbs/"
-# positive.data.path <- "./results/run1/positive/apbs/"
-# out.path <- "./analysis/apbs/with-cross-reactives/run1/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV/"
-
-# negative.data.path <- "./results/run2/negative/"
-# positive.data.path <- "./results/run2/positive/"
-# out.path <- "./analysis/apbs/with-cross-reactives/run2/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV/"
-
-negative.data.path <- "./results/run3/negative/"
-positive.data.path <- "./results/run3/positive/"
-out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/all/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/all/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/without-NLV/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/without-NLV/"
+negative.data.path <- "./results/negative/"
+positive.data.path <- "./results/positive/"
+out.path <- "./analysis/apbs/without-cross-reactives/CDR3-similarity/all/"
+# out.path <- "./analysis/apbs/without-cross-reactives/full-similarity/all/"
 
 
 # Make analysis directory

@@ -43,23 +43,12 @@ This script uses tidymodels to train a logistic regression classifier on the PIE
 
 ```{r paths, include=FALSE}
 # Paths
-# out.path <- "./analysis/classifier/without-cross-reactives/run1/with-NLV/"
-# input.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV/"
 
-# out.path <- "./analysis/classifier/without-cross-reactives/run1/without-NLV/"
-# input.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV/"
+# out.path <- "./analysis/classifier/CDR3-similarity/all/"
+# input.path <- "./analysis/apbs/CDR3-similarity/all/"
 
-# out.path <- "./analysis/classifier/without-cross-reactives/run2/with-NLV/"
-# input.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV/"
-
-# out.path <- "./analysis/classifier/without-cross-reactives/run2/without-NLV/"
-# input.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV/"
-
-# out.path <- "./analysis/classifier/without-cross-reactives/run3/CDR3-similarity/all/"
-# input.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/all/"
-
-out.path <- "./analysis/classifier/without-cross-reactives/run3/full-similarity/all/"
-input.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/all/"
+out.path <- "./analysis/classifier/full-similarity/all/"
+input.path <- "./analysis/apbs/full-similarity/all/"
 
 
 dir.create(out.path, showWarnings = FALSE, recursive = TRUE)

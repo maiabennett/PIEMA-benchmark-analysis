@@ -21,7 +21,7 @@ library(scales)
 # One column with the feature selection approach (all, limited, or tune for combined and structure, both, CDR3, or full for sequence)
 # One column with data inclusion (NLV, Yes or No)
 # One column with the metric value
-run.paths <- list(CDR3 = "./analysis/classifier/without-cross-reactives/run3/CDR3-similarity/", Full = "./analysis/classifier/without-cross-reactives/run3/full-similarity/")
+run.paths <- list(CDR3 = "./analysis/classifier/CDR3-similarity/", Full = "./analysis/classifier/full-similarity/")
 # nlv.paths <- list(Yes = "with-NLV/", No = "without-NLV/")
 epitope.paths <- list(All = "all/")
 feature.paths <- list(Combined = "combined_features_", Structure = "structure_features_", Sequence = "sequence_features_")
@@ -168,7 +168,7 @@ for (run in names(run.paths)) {
 # }
 
 # Save results
-out.path <- "./analysis/classifier/without-cross-reactives/run3/"
+out.path <- "./analysis/classifier/"
 write.csv(all.metrics, paste0(out.path, "all_metrics.csv"), row.names = FALSE)
 write.csv(all.epitope.metrics, paste0(out.path, "all_epitope_metrics.csv"), row.names = FALSE)
 # write.csv(limited.epitope.metrics, paste0(out.path, "limited_epitope_metrics.csv"), row.names = FALSE)

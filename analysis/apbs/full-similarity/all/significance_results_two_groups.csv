@@ -1,0 +1,14 @@
+"","Feature","Comparison","P.Value"
+"1","top.distance","True receptor pairs vs Negative receptor pairs",1.28398674253502e-26
+"2","top.kdist","True receptor pairs vs Negative receptor pairs",2.20209373568826e-41
+"3","top.corr","True receptor pairs vs Negative receptor pairs",9.5732967030841e-31
+"4","top.shapSim","True receptor pairs vs Negative receptor pairs",2.5811090844791e-26
+"5","top.med_scr","True receptor pairs vs Negative receptor pairs",2.22299287879546e-36
+"6","top.patDist","True receptor pairs vs Negative receptor pairs",1.66271706847388e-37
+"7","avg.distance","True receptor pairs vs Negative receptor pairs",2.75372848175094e-54
+"8","avg.kdist","True receptor pairs vs Negative receptor pairs",5.24797805525835e-44
+"9","avg.corr","True receptor pairs vs Negative receptor pairs",6.6519360942977e-33
+"10","count","True receptor pairs vs Negative receptor pairs",2.90268130508827e-75
+"11","CDR3.similarity","True receptor pairs vs Negative receptor pairs",3.57606861555222e-49
+"12","CDR.similarity","True receptor pairs vs Negative receptor pairs",4.04852806783058e-139
+"13","full.similarity","True receptor pairs vs Negative receptor pairs",9.22261982199244e-142

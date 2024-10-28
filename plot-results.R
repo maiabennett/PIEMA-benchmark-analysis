@@ -17,20 +17,8 @@ library(factoextra)
 library(DataExplorer)
 
 # Set working directory
-# out.path <- "./analysis/easymifs/run1/CMET/"
-# out.path <- "./analysis/easymifs/run1/OP/"
-# out.path <- "./analysis/apbs/with-cross-reactives/run1/"
-# out.path <- "./analysis/apbs/with-cross-reactives/run2/"
-
-# out.path <- "./analysis/apbs/without-cross-reactives/run1/with-NLV/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run1/without-NLV/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run2/with-NLV/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run2/without-NLV/"
-
-# out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/all/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run3/CDR3-similarity/without-NLV/"
-out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/all/"
-# out.path <- "./analysis/apbs/without-cross-reactives/run3/full-similarity/without-NLV/"
+# out.path <- "./analysis/apbs/without-cross-reactives/CDR3-similarity/all/"
+out.path <- "./analysis/apbs/without-cross-reactives/full-similarity/all/"
 
 
 # Load data
