@@ -5,9 +5,9 @@
 # University of Nebraska at Omaha
 # ============================================================
 
-source("../paired-tcr-data/util/filtering.R")
-source("../paired-tcr-data/util/processing.R")
-source("../paired-tcr-data/util/formatting.R")
+source("../TCRPaired/util/filtering.R")
+source("../TCRPaired/util/processing.R")
+source("../TCRPaired/util/formatting.R")
 
 # PIEMA benchmark data selection
 # Import high confidence data
@@ -28,8 +28,8 @@ write.csv(high.confidence.similarity.90 %>% select(-Compare), "./data/high-confi
 
 # This list contains all epitopes with > 25 receptors in 90% CDR3 sequence similarity high confidence dataset (i.e., "run 3: larger pool benchmark")
 # For reasons of simplifying the matter of cross-reactivity in logistic classifier training, the YVLDHLIVV epitope is excluded from this list
-target.epitopes.info.large <- fetchEpitopes(high.confidence.similarity.90, column = "Epitope", threshold = 25)
-target.epitopes.large <- target.epitopes.info.large %>% 
+target.epitopes.info <- fetchEpitopes(high.confidence.similarity.90, column = "Epitope", threshold = 25)
+target.epitopes <- target.epitopes.info %>% 
     filter(Epitope != "YVLDHLIVV") %>%
     pull(Epitope)
 # Here, although there is a variable number of receptors per epitope, the number of negative receptors is 30, as the characteristics of the negative data are further constrained and not all will be successfully modeled by Rosetta
@@ -43,26 +43,26 @@ all.reference.distinct <- all.reference.distinct %>%
         "IVTDFSVIK",
         "RLRAEAQVK"
     ))) 
-negative.data.large <- generateNegatives(all.reference.distinct, n.negative, target.epitope = NULL, target.epitopes.large, exclude.source)
-negative.data.large <- negative.data.large %>% 
+negative.data <- generateNegatives(all.reference.distinct, n.negative, target.epitope = NULL, target.epitopes, exclude.source)
+negative.data <- negative.data %>% 
     group_by(Epitope) %>%   
     mutate(clone.id = paste0("decoy_", Epitope, "_", row_number())) %>%
     ungroup()
 
-write.csv(negative.data.large, "./data/piema-benchmark-negative-sequences-expanded-benchmark.csv", row.names = FALSE)
+write.csv(negative.data, "./data/piema-benchmark-negative-sequences-expanded-benchmark.csv", row.names = FALSE)
 
 # For the expanded benchmark dataset, the process differs a bit: 30 receptors are sampled from the high confidence dataset for each epitope with counts > 25 are included, as there may be a number of receptors that fail to be modeled by Rosetta
-positive.data.large <- high.confidence.similarity.90 %>% 
-    filter(Epitope %in% target.epitopes.large) %>%
+positive.data <- high.confidence.similarity.90 %>% 
+    filter(Epitope %in% target.epitopes) %>%
     group_by(Epitope) %>% 
     sample_n(30) %>% 
     ungroup() 
 
-write.csv(positive.data.large, "./data/piema-benchmark-positive-sequences-expanded.csv", row.names = FALSE)
+write.csv(positive.data, "./data/piema-benchmark-positive-sequences-expanded.csv", row.names = FALSE)
 
 # Expanded benchmark dataset
-all.input.large <- rbind(
-    positive.data.large %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ),
-    negative.data.large %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ))
+all.input <- rbind(
+    positive.data %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ),
+    negative.data %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ))
 
-write.csv(all.input.large, "./data/piema-benchmark-input-sequences-expanded.csv", row.names = FALSE)
+write.csv(all.input, "./data/piema-benchmark-input-sequences-expanded.csv", row.names = FALSE)

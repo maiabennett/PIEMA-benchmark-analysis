@@ -131,10 +131,6 @@ all.receptor.data <- all.receptor.data %>%
 
 # Join all data with initial data (for sequence similarity calculation)
 # Import initial data
-# positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences.csv") 
-# negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences.csv")
-# positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences-full.csv") 
-# negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences-full.csv")
 positive.reference.data <- read.csv("./data/piema-benchmark-positive-sequences-expanded.csv") 
 negative.reference.data <- read.csv("./data/piema-benchmark-negative-sequences-expanded.csv")
 reference.data <- positive.reference.data %>%
