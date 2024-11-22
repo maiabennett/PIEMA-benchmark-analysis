@@ -36,7 +36,7 @@ sim.seq.pairs <- unique.true.pairs %>%
     arrange(desc(full.similarity)) %>%
     head(150)
 
-# Subset further to high sequence similarity and low sequence similarity in each previous group (15 per, for ease of analysis)
+# Subset further to high sequence similarity and low sequence similarity in each previous group (75 per, for ease of analysis)
 sim.seq.high.scoring.pairs <- sim.seq.pairs %>%
     arrange(desc(top.kas)) %>%
     head(75)
@@ -64,21 +64,29 @@ pair.ids <- sim.seq.high.scoring.pairs %>%
     head(15) %>% 
     pull(pair.id)
 writeLines(paste(pair.ids, collapse = ","), con = paste0(out.path, "similar-seq-high-scores.txt"))
+write.csv(sim.seq.high.scoring.pairs %>% 
+    head(15), paste0(out.path, "top_sim_seq_high_scoring_pairs.csv"), row.names = FALSE)
 
 pair.ids <- dissim.seq.high.scoring.pairs %>% 
     head(15) %>% 
     pull(pair.id)
 writeLines(paste(pair.ids, collapse = ","), con = paste0(out.path, "dissimilar-seq-high-scores.txt"))
+write.csv(dissim.seq.high.scoring.pairs %>% 
+    head(15), paste0(out.path, "top_dissim_seq_high_scoring_pairs.csv"), row.names = FALSE)
 
 pair.ids <- sim.seq.low.scoring.pairs %>% 
     head(15) %>% 
     pull(pair.id)
 writeLines(paste(pair.ids, collapse = ","), con = paste0(out.path, "similar-seq-low-scores.txt"))
+write.csv(sim.seq.low.scoring.pairs %>% 
+    head(15), paste0(out.path, "top_sim_seq_low_scoring_pairs.csv"), row.names = FALSE)
 
 pair.ids <- dissim.seq.low.scoring.pairs %>% 
     head(15) %>% 
     pull(pair.id)
 writeLines(paste(pair.ids, collapse = ","), con = paste0(out.path, "dissimilar-seq-low-scores.txt"))
+write.csv(dissim.seq.low.scoring.pairs %>% 
+    head(15), paste0(out.path, "top_dissim_seq_low_scoring_pairs.csv"), row.names = FALSE)
 
 
 # Subset unlikely pairs with high sequence similarity (top 10%) and high KAS scores (top 10%) for further investigation in PIEMA
@@ -149,6 +157,7 @@ write.csv(all.unlikely.preds, paste0(out.path, "unlikely_preds.csv"), row.names 
 
 # Plot scores classifier predictions per model/approach/etc. for each group
 # All structural and sequence scores per group
+# FIXME
 piema.scores <- c("avg.kas", "avg.euc.dist", "avg.spearman", "top.sg.euc.dist", "top.sg.cosine.sim", "kernel.count", "top.kas", "CDR3.similarity", "full.similarity")
 ggplot(all.highlighted.preds %>%
     distinct(pair.id, .keep_all = TRUE) %>%
