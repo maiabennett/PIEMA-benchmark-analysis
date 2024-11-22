@@ -49,7 +49,7 @@ negative.data <- negative.data %>%
     mutate(clone.id = paste0("decoy_", Epitope, "_", row_number())) %>%
     ungroup()
 
-write.csv(negative.data, "./data/piema-benchmark-negative-sequences-expanded-benchmark.csv", row.names = FALSE)
+write.csv(negative.data, "./data/piema-benchmark-negative-sequences.csv", row.names = FALSE)
 
 # For the expanded benchmark dataset, the process differs a bit: 30 receptors are sampled from the high confidence dataset for each epitope with counts > 25 are included, as there may be a number of receptors that fail to be modeled by Rosetta
 positive.data <- high.confidence.similarity.90 %>% 
@@ -58,11 +58,11 @@ positive.data <- high.confidence.similarity.90 %>%
     sample_n(30) %>% 
     ungroup() 
 
-write.csv(positive.data, "./data/piema-benchmark-positive-sequences-expanded.csv", row.names = FALSE)
+write.csv(positive.data, "./data/piema-benchmark-positive-sequences.csv", row.names = FALSE)
 
 # Expanded benchmark dataset
 all.input <- rbind(
     positive.data %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ),
     negative.data %>% select(clone.id, AV, CDR3a, AJ, BV, CDR3b, BJ))
 
-write.csv(all.input, "./data/piema-benchmark-input-sequences-expanded.csv", row.names = FALSE)
+write.csv(all.input, "./data/piema-benchmark-input-sequences.csv", row.names = FALSE)

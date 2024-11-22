@@ -29,6 +29,32 @@ model.paths <- list(`Model 1` = "model1_", `Model 2` = "model2_")
 
 all.metrics <- data.frame()
 limited.epitope.metrics <- data.frame()
+train.metrics <- data.frame()
+
+
+for (run in names(run.paths)) {
+    # for (nlv in names(nlv.paths)) {
+    for (epitope in names(epitope.paths)) {
+        for (feature in names(feature.paths)) {
+            for (model in names(model.paths)) {
+                metrics <- read.csv(paste0(run.paths[[run]], epitope.paths[[epitope]],
+                    # nlv.paths[[nlv]], 
+                    feature.paths[[feature]], model.paths[[model]], "train_metrics.csv")) %>%
+                    mutate(Metrics = .metric, Dataset = run, Approach = feature, Model = model, Epitopes = epitope
+                        # NLV = nlv
+                        ) %>% 
+                    select(-.metric) %>%
+                    pivot_longer(cols = -c(Metrics, Dataset, Approach, Model, Epitopes
+                        # NLV
+                        ), names_to = "Feature", values_to = "Value") %>%
+                    pivot_wider(names_from = Metrics, values_from = Value) 
+
+                train.metrics <- rbind(train.metrics, metrics)
+            }
+        }
+    }
+}
+
 
 for (run in names(run.paths)) {
     # for (nlv in names(nlv.paths)) {
@@ -54,7 +80,29 @@ for (run in names(run.paths)) {
 }
 
 
-        
+train.test.metrics <- bind_rows(train.metrics %>% 
+    mutate(Cohort = "Training"), all.metrics%>% 
+    mutate(Cohort = "Testing")) 
+
+train.test.metrics <- train.test.metrics %>% 
+    arrange(Model, Approach) %>%
+    pivot_longer(cols = 
+        -c(Cohort, Dataset, Feature, Approach, Model, Epitopes), names_to = "Metric", values_to = "Value") %>%
+    pivot_wider(names_from = Cohort, values_from = Value, names_sep = "_") %>% 
+    pivot_wider(names_from = Feature, values_from = c(Training, Testing), names_sep = "_") 
+
+pr.auc.metrics <- pr.auc.metrics %>% 
+    pivot_wider(names_from = Feature, values_from = pr_auc, names_sep = "_")
+
+features <- unique(gsub("^(Training|Testing)_(.*)$", "\\2", names(train.test.metrics %>% select(-Approach, -Model, -Metric))))
+
+train.test.metrics <- train.test.metrics %>% 
+    select(
+        Approach, Model, Metric,
+        matches(paste0("^(Training|Testing)_", features, "$"))
+    )
+
+write.csv(train.test.metrics, "./analysis/classifier/train_test_metrics.csv", row.names = FALSE)
 
 # Combine per-epitope metrics
 all.epitope.metrics <- data.frame()
@@ -658,7 +706,7 @@ for (run in names(run.paths)) {
 }
 
 model1.preds <- model1.preds %>% 
-    mutate(shared.specificity = factor(shared.specificity, levels = c("No", "Yes")))
+    mutate(shared.specificity = factor(shared.specificity, levels = c("No", "Yes"))) 
 model2.preds <- model2.preds %>%
     mutate(shared.specificity = factor(shared.specificity, levels = c("No", "Yes")))
 
@@ -668,6 +716,7 @@ write.csv(model2.preds, paste0(out.path, "all_model2_preds.csv"), row.names = FA
 # Model 1
 # ROC AUC curves
 # Color by LogReg approach, linetype by Feature
+library(yardstick)
 model1.preds %>% 
     mutate(`LogReg Approach` = paste(Approach, "approach,", Feature)) %>% 
     group_by(`LogReg Approach`, Approach) %>%
