@@ -194,25 +194,45 @@ ggsave(paste0(out.path, "highlighted_pred_classes.png"), width = 15, height = 10
 # By model, approach, and features
 ggplot(all.highlighted.preds %>%
     filter(Dataset == "CDR3") %>%
-    mutate(`LogReg Approach` = paste0(Model, ", ", Approach, " (", Feature, ")")) %>%
-    group_by(`LogReg Approach`, group, .pred_class) %>%
-    summarise(count = n()) %>%
-    group_by(`LogReg Approach`, group) %>%
-    mutate(proportion = count / sum(count) * 100), 
-    aes(x = .pred_class, y = proportion, fill = group)) +
-    geom_bar(stat = "identity", position = "dodge") +
+    filter(Model == "Model 1") %>%
+    mutate(`LogReg Approach` = paste0(Model, ", ", Approach, " (", Feature, ")")), #%>%
+    # group_by(`LogReg Approach`, group, .pred_class) %>%
+    # summarise(count = n()) %>%
+    # group_by(`LogReg Approach`, group) %>%
+    # mutate(proportion = count / sum(count) * 100), 
+    aes(x = group,  fill = .pred_class)) +
+    geom_bar(position="fill", alpha = 0.7) +
     facet_wrap( ~ `LogReg Approach`, ncol = 3) +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Predictions for highlighted receptor pair groups", x = "Prediction of shared specificity", y = "% of observations") +
-    scale_fill_viridis_d(option = "magma", begin = 0.2, end = 0.9)
+    scale_fill_viridis_d(option = "magma", begin = 0.3, end = 0.7)
 
-ggsave(paste0(out.path, "highlighted_pred_classes_by_features.png"), width = 10, height = 15)
+ggsave(paste0(out.path, "pred-class-model1.png"), width = 15, height = 7)
+
+ggplot(all.highlighted.preds %>%
+    filter(Dataset == "CDR3") %>%
+    filter(Model == "Model 2") %>%
+    mutate(`LogReg Approach` = paste0(Model, ", ", Approach, " (", Feature, ")")), #%>%
+    # group_by(`LogReg Approach`, group, .pred_class) %>%
+    # summarise(count = n()) %>%
+    # group_by(`LogReg Approach`, group) %>%
+    # mutate(proportion = count / sum(count) * 100), 
+    aes(x = group,  fill = .pred_class)) +
+    geom_bar(position="fill", alpha = 0.7) +
+    facet_wrap( ~ `LogReg Approach`, ncol = 3) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Predictions for highlighted receptor pair groups", x = "Prediction of shared specificity", y = "% of observations") +
+    scale_fill_viridis_d(option = "mako", begin = 0.3, end = 0.7)
+
+ggsave(paste0(out.path, "pred-class-model2.png"), width = 15, height = 7)
 
 # Distribution of .pred_yes and .pred_no
 # By model and approach
 ggplot(all.highlighted.preds %>%
     filter(Dataset == "CDR3") %>%
+    filter(Model == "Model 1") %>%
     mutate(`LogReg Approach` = paste0(Model, ", ", Approach)) %>%
     pivot_longer(cols = c(".pred_Yes", ".pred_No"), names_to = "Predicted class", values_to = "Probability"),
     aes(x = `Predicted class`, y = Probability, fill = group)) +
@@ -242,19 +262,49 @@ ggsave(paste0(out.path, "highlighted_pred_probs_by_features.png"), width = 15, h
 
 # Density plots of class probabilities 
 # By model and approach
-ggplot(all.highlighted.preds %>%
+data_yes <- all.highlighted.preds %>%
     filter(Dataset == "CDR3") %>%
-    mutate(`LogReg Approach` = paste0(Model, ", ", Approach)) %>%
-    pivot_longer(cols = c(".pred_Yes", ".pred_No"), names_to = "Predicted class", values_to = "Probability"),
-    aes(x = Probability, fill = group, linetype = `Predicted class`)) +
-    geom_density(alpha = 0.5) +
-    facet_wrap( ~ `LogReg Approach`) +
-    theme_minimal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-    labs(title = "Density of predicted probabilities for highlighted receptor pair groups", x = "Probability", y = "Density") +
-    scale_fill_viridis_d(option = "magma", begin = 0.2, end = 0.9)
+    filter(Model == "Model 1") %>%
+    mutate(`LogReg Approach` = paste0(Model, ", ", Approach)) %>% 
+    filter(.pred_class == "Yes")
+data_no <- all.highlighted.preds %>%
+    filter(Dataset == "CDR3") %>%
+    filter(Model == "Model 1") %>%
+    mutate(`LogReg Approach` = paste0(Model, ", ", Approach)) %>% 
+    filter(.pred_class == "No")
 
-ggsave(paste0(out.path, "highlighted_pred_probs_density.png"), width = 15, height = 10)
+ggplot(all.highlighted.preds%>%
+    filter(Dataset == "CDR3") %>%
+    filter(Model == "Model 1") %>%
+    mutate(`LogReg Approach` = paste0(Model, ", ", Approach)), 
+    aes(x = .pred_Yes, fill = group)) +
+    geom_density(alpha = 0.7) +
+    facet_wrap(~`LogReg Approach`) +
+    theme_minimal() +
+    geom_vline(xintercept=0.5, linetype="dashed", color = "black") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Task 1: Density of predicted probabilities for class 'Yes'", x = "Probability", y = "Density") +
+    scale_fill_viridis_d(option = "magma", begin = 0.2, end = 0.9) +
+    scale_x_continuous(limits = c(0, 1))
+
+ggsave(paste0(out.path, "pred_Yes_score-density-model1.png"), width = 10, height = 5)
+
+ggplot(all.highlighted.preds%>%
+    filter(Dataset == "CDR3") %>%
+    filter(Model == "Model 2") %>%
+    mutate(`LogReg Approach` = paste0(Model, ", ", Approach)), 
+    aes(x = .pred_Yes, fill = group)) +
+    geom_density(alpha = 0.7) +
+    facet_wrap(~`LogReg Approach`) +
+    theme_minimal() +
+    geom_vline(xintercept=0.5, linetype="dashed", color = "black") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(title = "Tasl 2: Density of predicted probabilities for class 'Yes'", x = "Probability", y = "Density") +
+    scale_fill_viridis_d(option = "mako", begin = 0.2, end = 0.9) +
+    scale_x_continuous(limits = c(0, 1))
+
+ggsave(paste0(out.path, "pred_Yes_score-density-model2.png"), width = 10, height = 5)
+
 
 # By model, approach, and features
 ggplot(all.highlighted.preds %>%
@@ -267,6 +317,6 @@ ggplot(all.highlighted.preds %>%
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Density of predicted probabilities for highlighted receptor pair groups", x = "Probability", y = "Density") +
-    scale_fill_viridis_d(option = "magma", begin = 0.2, end = 0.9)
+    scale_fill_viridis_d(option = "magma", begin = 0.2, end = 0.9) 
 
 ggsave(paste0(out.path, "highlighted_pred_probs_density_by_features.png"), width = 15, height = 25)

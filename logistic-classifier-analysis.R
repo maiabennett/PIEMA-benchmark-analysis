@@ -183,10 +183,10 @@ ggplot(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Accuracy by dataset and approach", subtitle = "Model 1: Positive vs. Decoy pairs", y = "Accuracy") +
-    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.45,0.75),oob = rescale_none)
 
-ggsave(paste0(out.path, "accuracy_model1.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "accuracy_model1.png"), width = 12, height = 10, dpi = 300)
 
 # Model 2
 ggplot(
@@ -209,10 +209,10 @@ ggplot(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Accuracy by dataset and approach", subtitle = "Model 2: Positive vs. Unlikely and Decoy pairs", y = "Accuracy") +
-    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.45,0.75),oob = rescale_none)
 
-ggsave(paste0(out.path, "accuracy_model2.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "accuracy_model2.png"), width = 12, height = 10, dpi = 300)
 
 # Plotting ROC_AUC
 # Model 1
@@ -236,10 +236,10 @@ ggplot(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "ROC_AUC by dataset and approach", subtitle = "Model 1: Positive vs. Decoy pairs", y = "ROC_AUC") +
-    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.45,0.7),oob = rescale_none)
 
-ggsave(paste0(out.path, "roc_auc_model1.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "roc_auc_model1.png"), width = 14, height = 7, dpi = 300)
 
 # Model 2
 ggplot(
@@ -263,9 +263,9 @@ ggplot(
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "ROC_AUC by dataset and approach", subtitle = "Model 2: Positive vs. Unlikely and Decoy pairs", y = "ROC_AUC") +
     scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
-    scale_y_continuous(limits=c(0.45,0.7),oob = rescale_none)
+    scale_y_continuous(limits=c(0,0.7),oob = rescale_none)
 
-ggsave(paste0(out.path, "roc_auc_model2.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "roc_auc_model2.png"), width = 14, height = 7, dpi = 300)
 
 # Plotting PR_AUC
 # Model 1
@@ -289,10 +289,10 @@ ggplot(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "PR_AUC by dataset and approach", subtitle = "Model 1: Positive vs. Decoy pairs", y = "PR_AUC") +
-    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.1,0.6),oob = rescale_none)
 
-ggsave(paste0(out.path, "pr_auc_model1.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "pr_auc_model1.png"), width = 14, height = 10, dpi = 300)
 
 # Model 2
 ggplot(
@@ -315,10 +315,10 @@ ggplot(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "PR_AUC by dataset and approach", subtitle = "Model 2: Positive vs. Unlikely and Decoy pairs", y = "PR_AUC") +
-    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.1,0.6),oob = rescale_none)
 
-ggsave(paste0(out.path, "pr_auc_model2.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "pr_auc_model2.png"), width = 14, height = 10, dpi = 300)
 
 # Plotting recall
 # Model 1
@@ -342,10 +342,10 @@ ggplot(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Recall by dataset and approach", subtitle = "Model 1: Positive vs. Decoy pairs", y = "Recall") +
-    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.35,0.6),oob = rescale_none)
 
-ggsave(paste0(out.path, "recall_model1.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "recall_model1.png"), width = 12, height = 10, dpi = 300)
 
 # Model 2
 ggplot(
@@ -368,10 +368,10 @@ ggplot(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Recall by dataset and approach", subtitle = "Model 2: Positive vs. Unlikely and Decoy pairs", y = "Recall") +
-    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.35,0.6),oob = rescale_none)
 
-ggsave(paste0(out.path, "recall_model2.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "recall_model2.png"), width = 12, height = 10, dpi = 300)
 
 # Precision
 # Model 1
@@ -395,10 +395,10 @@ ggplot(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Precision by dataset and approach", subtitle = "Model 1: Positive vs. Decoy pairs", y = "Precision") +
-    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.05,0.5),oob = rescale_none)
 
-ggsave(paste0(out.path, "precision_model1.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "precision_model1.png"), width = 12, height = 10, dpi = 300)
 
 # Model 2
 ggplot(
@@ -421,10 +421,10 @@ ggplot(
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Precision by dataset and approach", subtitle = "Model 2: Positive vs. Unlikely and Decoy pairs", y = "Precision") +
-    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.05,0.5),oob = rescale_none)
 
-ggsave(paste0(out.path, "precision_model2.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "precision_model2.png"), width = 12, height = 10, dpi = 300)
 
 
 # Feature coefficients
@@ -454,7 +454,7 @@ ggplot(
     labs(title = "Feature coefficients by dataset and approach", subtitle = "Model 1: Positive vs Decoy pairs", y = "Coefficient") +
     scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9)
 
-ggsave(paste0(out.path, "feature_coefficients_model1.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "feature_coefficients_model1.png"), width = 12, height = 10, dpi = 300)
 
 # Model 2
 ggplot(
@@ -477,7 +477,7 @@ ggplot(
     labs(title = "Feature coefficients by dataset and approach", subtitle = "Model 2: Positive vs Unlikely and Decoy pairs", y = "Coefficient") +
     scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9)
 
-ggsave(paste0(out.path, "feature_coefficients_model2.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "feature_coefficients_model2.png"), width = 12, height = 10, dpi = 300)
 
 
 # Per-epitope performance metrics
@@ -507,10 +507,10 @@ ggplot(
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Accuracy by dataset and epitope", subtitle = "Model 1: Positive vs Decoy pairs", y = "Accuracy") +
     #scale_fill_manual(values = model1.approach.colors) +
-    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.45,0.8),oob = rescale_none)
 
-ggsave(paste0(out.path, "accuracy_by_epitope_model1.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "accuracy_by_epitope_model1.png"), width = 14, height = 10, dpi = 300)
 
 
 # Model 2
@@ -538,10 +538,10 @@ ggplot(
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "Accuracy by dataset and epitope", subtitle = "Model 2: Positive vs Unlikely and Decoy pairs", y = "Accuracy") +
     #scale_fill_manual(values = model2.approach.colors) +
-    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.45,0.8),oob = rescale_none)
 
-ggsave(paste0(out.path, "accuracy_by_epitope_model2.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "accuracy_by_epitope_model2.png"), width = 14, height = 10, dpi = 300)
 
 
 # ROC AUC
@@ -571,10 +571,10 @@ ggplot(
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "ROC AUC by dataset and epitope", subtitle = "Model 1: Positive vs Decoy pairs", y = "ROC AUC") +
     #scale_fill_manual(values = model1.approach.colors) +
-    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.45,0.9),oob = rescale_none)
 
-ggsave(paste0(out.path, "roc_auc_by_epitope_model1.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "roc_auc_by_epitope_model1.png"), width = 14, height = 10, dpi = 300)
 
 
 # Model 2
@@ -603,9 +603,9 @@ ggplot(
     labs(title = "ROC AUC by dataset and epitope", subtitle = "Model 2: Positive vs Unlikely and Decoy pairs", y = "ROC AUC") +
     #scale_fill_manual(values = model2.approach.colors) +
     scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
-    scale_y_continuous(limits=c(0.45,0.9),oob = rescale_none)
+    scale_y_continuous(limits=c(0,0.85),oob = rescale_none)
 
-ggsave(paste0(out.path, "roc_auc_by_epitope_model2.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "roc_auc_by_epitope_model2.png"), width = 14, height = 10, dpi = 300)
 
 
 # PR AUC
@@ -634,10 +634,10 @@ ggplot(
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     labs(title = "PR AUC by dataset and epitope", subtitle = "Model 1: Positive vs Decoy pairs", y = "PR AUC") +
     #scale_fill_manual(values = model1.approach.colors) +
-    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) #+
     scale_y_continuous(limits=c(0.05,0.8),oob = rescale_none)
 
-ggsave(paste0(out.path, "pr_auc_by_epitope_model1.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "pr_auc_by_epitope_model1.png"), width = 14, height = 10, dpi = 300)
 
 
 # Model 2
@@ -666,10 +666,59 @@ ggplot(
     labs(title = "PR AUC by dataset and epitope", subtitle = "Model 2: Positive vs Unlikely and Decoy pairs", y = "PR AUC") +
     #scale_fill_manual(values = model2.approach.colors) +
     scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
-    scale_y_continuous(limits=c(0.05,0.8),oob = rescale_none)
+    scale_y_continuous(limits=c(0.0,0.6),oob = rescale_none)
 
-ggsave(paste0(out.path, "pr_auc_by_epitope_model2.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "pr_auc_by_epitope_model2.png"), width = 14, height = 10, dpi = 300)
 
+# Bar chart of all metrics
+
+# Model 1
+ggplot(
+    all.metrics %>% 
+        filter(Model == "Model 1") %>%
+        mutate(Dataset = ifelse(Dataset == "CDR3", "<90% CDR3 Similarity\n", "<90% Full Seq. Similarity\n")) %>%
+        mutate(`LogReg Approach` = case_when(
+            Approach == "Sequence" & Feature == "cdr3" ~ paste(Approach, "approach (CDR3 only)"),
+            Approach == "Sequence" & Feature == "both" ~ paste(Approach, "approach (CDR3 + full seq.)"),
+            Approach == "Sequence" & Feature == "full" ~ paste(Approach, "approach (full seq. only)"),
+            #Approach == "Combined" & Feature == "limited.features" ~ paste(Approach, "approach (CDR3 only)"),
+            .default = paste(Approach, "approach,", Feature))) %>%
+        mutate(Data = paste(Dataset, Epitopes)) %>% 
+        pivot_longer(cols = c(accuracy, roc_auc, pr_auc, precision, recall, bal_accuracy, f_meas, sens, spec), names_to = "Metric", values_to = "Value"),
+    aes(x = `LogReg Approach`, y = Value, fill = `LogReg Approach`)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    facet_wrap( ~ Metric, strip.position = "bottom", scales = "free_x", nrow = 2) +
+    theme_minimal() +
+    theme(axis.text.x = element_blank()) +
+    labs(title = "Model 1: All metrics by dataset and approach", y = "Value") +
+    scale_fill_viridis_d(option = "plasma", begin = 0.1, end = .9) +
+    scale_y_continuous(limits=c(0.0,0.9),oob = rescale_none)
+
+ggsave(paste0(out.path, "all_metrics_model1.png"), width = 10, height = 7, dpi = 300)
+
+# Model 2
+ggplot(
+    all.metrics %>% 
+        filter(Model == "Model 2") %>%
+        mutate(Dataset = ifelse(Dataset == "CDR3", "<90% CDR3 Similarity\n", "<90% Full Seq. Similarity\n")) %>%
+        mutate(`LogReg Approach` = case_when(
+            Approach == "Sequence" & Feature == "cdr3" ~ paste(Approach, "approach (CDR3 only)"),
+            Approach == "Sequence" & Feature == "both" ~ paste(Approach, "approach (CDR3 + full seq.)"),
+            Approach == "Sequence" & Feature == "full" ~ paste(Approach, "approach (full seq. only)"),
+            #Approach == "Combined" & Feature == "limited.features" ~ paste(Approach, "approach (CDR3 only)"),
+            .default = paste(Approach, "approach,", Feature))) %>%
+        mutate(Data = paste(Dataset, Epitopes)) %>% 
+        pivot_longer(cols = c(accuracy, roc_auc, pr_auc, precision, recall, bal_accuracy, f_meas, sens, spec), names_to = "Metric", values_to = "Value"),
+    aes(x = `LogReg Approach`, y = Value, fill = `LogReg Approach`)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    facet_wrap( ~ Metric, strip.position = "bottom", scales = "free_x", nrow = 2) +
+    theme_minimal() +
+    theme(axis.text.x = element_blank()) +
+    labs(title = "Model 2: All metrics by dataset and approach", y = "Value") +
+    scale_fill_viridis_d(option = "viridis", begin = 0.1, end = .9) +
+    scale_y_continuous(limits=c(0.0,0.9),oob = rescale_none)
+
+ggsave(paste0(out.path, "all_metrics_model2.png"), width = 10, height = 7, dpi = 300)
 
 # Import data for ROC AUC and PR AUC curves
 model1.preds <- data.frame()
@@ -713,6 +762,8 @@ model2.preds <- model2.preds %>%
 write.csv(model1.preds, paste0(out.path, "all_model1_preds.csv"), row.names = FALSE)
 write.csv(model2.preds, paste0(out.path, "all_model2_preds.csv"), row.names = FALSE)
 
+
+
 # Model 1
 # ROC AUC curves
 # Color by LogReg approach, linetype by Feature
@@ -729,7 +780,7 @@ model1.preds %>%
     scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted")) +
     labs(title = "ROC curve, Model 1: Positive vs Decoy pairs", x = "1 - Specificity", y = "Sensitivity")
 
-ggsave(paste0(out.path, "roc_auc_curves_model1.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "roc_auc_curves_model1.png"), width = 10, height = 10, dpi = 300)
 
 # ROC AUC curves per epitope
 model1.preds %>% 
@@ -745,7 +796,7 @@ model1.preds %>%
     scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted")) +
     labs(title = "ROC curve, Model 1: Positive vs Decoy pairs", x = "1 - Specificity", y = "Sensitivity")
 
-ggsave(paste0(out.path, "roc_auc_curves_model1_per_epitope.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "roc_auc_curves_model1_per_epitope.png"), width = 12, height = 10, dpi = 300)
 
 
 # PR AUC curves
@@ -760,7 +811,7 @@ model1.preds %>%
     scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted")) +
     labs(title = "PR curve, Model 1: Positive vs Decoy pairs", x = "Recall", y = "Precision")
 
-ggsave(paste0(out.path, "pr_auc_curves_model1.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "pr_auc_curves_model1.png"), width = 10, height = 10, dpi = 300)
 
 # PR AUC curves per epitope
 model1.preds %>%
@@ -775,7 +826,7 @@ model1.preds %>%
     scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted")) +
     labs(title = "PR curve, Model 1: Positive vs Decoy pairs", x = "Recall", y = "Precision")
 
-ggsave(paste0(out.path, "pr_auc_curves_model1_per_epitope.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "pr_auc_curves_model1_per_epitope.png"), width = 12, height = 10, dpi = 300)
 
 # Model 2
 # ROC AUC curves
@@ -791,7 +842,7 @@ model2.preds %>%
     scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted")) +
     labs(title = "ROC curve, Model 2: Positve vs Unlikely and Decoy pairs", x = "1 - Specificity", y = "Sensitivity")
 
-ggsave(paste0(out.path, "roc_auc_curves_model2.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "roc_auc_curves_model2.png"), width = 10, height = 10, dpi = 300)
 
 # ROC AUC curves per epitope
 model2.preds %>% 
@@ -811,7 +862,7 @@ model2.preds %>%
     scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted")) +
     labs(title = "ROC curve, Model 2: Positive vs Unlikely and Decoy pairs", x = "1 - Specificity", y = "Sensitivity")
 
-ggsave(paste0(out.path, "roc_auc_curves_model2_per_epitope.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "roc_auc_curves_model2_per_epitope.png"), width = 12, height = 10, dpi = 300)
 
 # PR AUC curves
 model2.preds %>%
@@ -825,7 +876,7 @@ model2.preds %>%
     scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted")) +
     labs(title = "PR curve, Model 2: Positive vs Unlikely and Decoy pairs", x = "Recall", y = "Precision")
 
-ggsave(paste0(out.path, "pr_auc_curves_model2.png"), width = 20, height = 10, dpi = 300)
+ggsave(paste0(out.path, "pr_auc_curves_model2.png"), width = 10, height = 10, dpi = 300)
 
 # PR AUC curves per epitope
 model2.preds %>%
@@ -840,4 +891,4 @@ model2.preds %>%
     scale_linetype_manual(values = c("Combined" = "solid", "Structure" = "dashed", "Sequence" = "dotted")) +
     labs(title = "PR curve, Model 2: Positive vs Unlikely and Decoy pairs", x = "Recall", y = "Precision")
 
-ggsave(paste0(out.path, "pr_auc_curves_model2_per_epitope.png"), width = 20, height = 15, dpi = 300)
+ggsave(paste0(out.path, "pr_auc_curves_model2_per_epitope.png"), width = 12, height = 10, dpi = 300)
